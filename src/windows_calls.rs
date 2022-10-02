@@ -1,4 +1,5 @@
 use windows::Win32::Foundation::POINT;
+use windows::Win32::UI::Shell::IAppVisibility;
 use windows::Win32::{Foundation, UI::WindowsAndMessaging::*};
 use Foundation::HWND;
 use Foundation::RECT;
@@ -46,8 +47,7 @@ impl FormEntry {
         if erg.as_bool() {
             return Some(FormEntry { hwnd, rect });
         }
-        println!("did not find {name}!");
-        dbg!(hwnd);
+        /* todo: log error */
         None
     }
 }
@@ -84,6 +84,31 @@ pub fn get_point_in_rect(rect: &RECT, point: &POINT) -> bool {
     unsafe { windows::Win32::Graphics::Gdi::PtInRect(rect, *point).as_bool() }
 }
 
+pub fn initialize_windows_calls() {
+    unsafe {
+        /* Initialize system com to retrieve taskbar state in get start menu open function. Safety: None as parameter. */
+        if let Err(_) = windows::Win32::System::Com::CoInitialize(None) { /* todo: log error */ }
+    }
+}
+
+pub fn get_start_menu_open() -> bool {
+    let val = windows::core::GUID::from("7E5FE3D9-985F-4908-91F9-EE19F9FD1514");
+    unsafe {
+        let start_menu_result: Result<IAppVisibility, _> =
+            windows::Win32::System::Com::CoCreateInstance(
+                &val,
+                None,
+                windows::Win32::System::Com::CLSCTX_INPROC_SERVER,
+            );
+        if let Ok(start_menu) = start_menu_result {
+            if let Ok(result) = start_menu.IsLauncherVisible() {
+                return result.as_bool();
+            }
+        }
+    }
+    false
+}
+
 pub fn get_cursor_pos() -> Option<POINT> {
     let mut point = POINT::default();
     /* Safety: returning none if the cursor pos can not be retrieved. */
@@ -91,6 +116,7 @@ pub fn get_cursor_pos() -> Option<POINT> {
         if windows::Win32::UI::WindowsAndMessaging::GetCursorPos(&mut point).as_bool() {
             return Some(point);
         }
+        /* todo: log error */
     }
     None
 }

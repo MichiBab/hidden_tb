@@ -12,7 +12,7 @@ fn main() {
     loop {
         thread::sleep(sleep_in_ms);
         let is_hovering = taskbar.is_hovering_on_tb();
-        let start_menu_open = windows_calls::get_start_myenu_open();
+        let start_menu_open = windows_calls::get_start_menu_open();
         println!("{is_hovering}");
         println!("{start_menu_open}");
         println!("------------------");

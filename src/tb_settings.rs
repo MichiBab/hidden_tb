@@ -12,7 +12,10 @@ pub struct TbSettings {
 impl TbSettings {
     fn new() -> Self {
         //todo load in yaml file
-        TbSettings::default()
+        TbSettings {
+            autohide: false,
+            sleep_time_in_ms: 1000,
+        }
     }
 }
 
