@@ -1,2 +1,9 @@
 -- check if windows button is pressed
 -- load yaml on start in tb settings
+
+--------
+sometimes, the generate taskbar info fails.
+So either: build in a automatic retry if there is a none in it, or create one at the start until it works and use it.
+The problem then is, what happens if it could change dynamically?
+for now, and generally for safety reasons, skip loop if it contains none and generate a tb on each iteration.
+this will be useful later for adding dynamic borders.
