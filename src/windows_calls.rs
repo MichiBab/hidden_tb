@@ -1,9 +1,10 @@
+use windows::Win32::Foundation::POINT;
 use windows::Win32::{Foundation, UI::WindowsAndMessaging::*};
 use Foundation::HWND;
 use Foundation::RECT;
 
 #[derive(Default, Debug)]
-struct FormEntry {
+pub struct FormEntry {
     pub hwnd: HWND,
     pub rect: RECT,
 }
@@ -20,14 +21,14 @@ pub struct TaskbarData {
 
     apps depend on applist.
     */
-    taskbar: Option<FormEntry>,
+    pub taskbar: Option<FormEntry>,
 
-    tray: Option<FormEntry>,
-    rebar: Option<FormEntry>,
+    pub tray: Option<FormEntry>,
+    pub rebar: Option<FormEntry>,
 
-    applist: Option<FormEntry>,
+    pub applist: Option<FormEntry>,
 
-    apps: Option<FormEntry>,
+    pub apps: Option<FormEntry>,
 }
 
 impl FormEntry {
@@ -76,4 +77,20 @@ impl TaskbarData {
 #[inline]
 unsafe fn string_to_pcstr(input: &str) -> windows::core::PCSTR {
     windows::core::PCSTR::from_raw(format!("{input}\0").as_bytes().as_ptr())
+}
+
+pub fn get_point_in_rect(rect: &RECT, point: &POINT) -> bool {
+    /* safety: both have to be checked to be valid as its done in taskbar::is_hovering_on_tb */
+    unsafe { windows::Win32::Graphics::Gdi::PtInRect(rect, *point).as_bool() }
+}
+
+pub fn get_cursor_pos() -> Option<POINT> {
+    let mut point = POINT::default();
+    /* Safety: returning none if the cursor pos can not be retrieved. */
+    unsafe {
+        if windows::Win32::UI::WindowsAndMessaging::GetCursorPos(&mut point).as_bool() {
+            return Some(point);
+        }
+    }
+    None
 }
