@@ -1,7 +1,4 @@
-use crate::{
-    tb_settings,
-    windows_calls::{self},
-};
+use crate::windows_calls::{self};
 
 /*  */
 #[derive(Default, Debug)]
