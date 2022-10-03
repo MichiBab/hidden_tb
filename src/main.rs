@@ -1,9 +1,11 @@
+#![windows_subsystem = "windows"]
+
 use std::{thread, time};
 use taskbar::Taskbar;
-
 mod monitors;
 mod taskbar;
 mod tb_settings;
+mod tray;
 mod windows_calls;
 
 fn main() -> ! {
@@ -11,7 +13,9 @@ fn main() -> ! {
     let settings = tb_settings::get_tb_settings();
     let dur = time::Duration::from_millis(settings.get_sleep_time_in_ms());
     let mut taskbar = Taskbar::new();
-
+    let _ui_handle = std::thread::spawn(|| -> () {
+        tray::start_tray_icon();
+    });
     loop {
         thread::sleep(dur);
         if taskbar.contains_none() {

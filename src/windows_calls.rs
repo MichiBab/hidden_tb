@@ -121,12 +121,12 @@ unsafe fn check_and_set_transparency_style(hwnd: &HWND) {
 
     /* check if the style is set to enable transparency first */
     let current_style = windows::Win32::UI::WindowsAndMessaging::GetWindowLongA(*hwnd, GWL_EXSTYLE);
-    if (current_style & __WS_EX_TRANSPARENT) == __WS_EX_TRANSPARENT {
+    if (current_style & WS_EX_LAYERED.0 as i32) != WS_EX_LAYERED.0 as i32 {
         /* set the style to enable transparency */
         windows::Win32::UI::WindowsAndMessaging::SetWindowLongA(
             *hwnd,
             GWL_EXSTYLE,
-            current_style ^ __WS_EX_TRANSPARENT,
+            WS_EX_LAYERED.0 as i32,
         );
     }
 }
