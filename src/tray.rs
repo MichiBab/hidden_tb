@@ -54,7 +54,7 @@ mod system_tray_ui {
             nwg::TrayNotification::builder()
                 .parent(&data.window)
                 .icon(Some(&data.icon))
-                .tip(Some("Hello"))
+                .tip(Some("Close hidden_tb"))
                 .build(&mut data.tray)?;
 
             nwg::Menu::builder()

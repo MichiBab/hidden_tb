@@ -26,6 +26,10 @@ impl Taskbar {
         self.taskbar_data = windows_calls::TaskbarData::new();
     }
 
+    pub fn insert_handles(&mut self, new_tb: Self) {
+        self.taskbar_data = new_tb.taskbar_data;
+    }
+
     pub fn refresh_area_and_set_on_top(&self) {
         if let Some(taskbar) = &self.taskbar_data.taskbar {
             windows_calls::set_handle_to_topmost(&taskbar.hwnd);

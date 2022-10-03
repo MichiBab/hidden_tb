@@ -35,10 +35,9 @@ fn main() {
                 taskbar.check_and_set_taskbar_transparency_state();
                 windows_calls::check_and_update_workspace_region_for_autohide(&taskbar);
             }
-            taskbar.refresh_handles();
-            if taskbar.contains_none() {
-                taskbar.refresh_handles();
-                continue;
+            let new_handles = Taskbar::new();
+            if !new_handles.contains_none() {
+                taskbar.insert_handles(new_handles);
             }
         }
 
