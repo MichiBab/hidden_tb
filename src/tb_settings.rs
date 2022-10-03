@@ -7,23 +7,35 @@ use once_cell::sync::OnceCell;
 pub struct TbSettings {
     autohide: bool,
     sleep_time_in_ms: u64,
+    animation_time_in_ms: u64,
+    animation_steps: u8,
 }
 
 impl TbSettings {
     fn new() -> Self {
         //todo load in yaml file
         TbSettings {
-            autohide: false,
+            autohide: true,
             sleep_time_in_ms: 10,
+            animation_time_in_ms: 15,
+            animation_steps: 4,
         }
     }
 
-    pub fn get_sleep_time_in_ms(&self) -> u64 {
-        return self.sleep_time_in_ms;
+    pub fn get_animation_time_in_ms(&self) -> u64 {
+        return self.animation_time_in_ms;
+    }
+
+    pub fn get_animation_steps(&self) -> u8 {
+        return self.animation_steps;
     }
 
     pub fn get_autohide(&self) -> bool {
         return self.autohide;
+    }
+
+    pub fn get_sleep_time_in_ms(&self) -> u64 {
+        return self.sleep_time_in_ms;
     }
 }
 
