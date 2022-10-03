@@ -91,6 +91,35 @@ pub fn get_point_in_rect(rect: &RECT, point: &POINT) -> bool {
     unsafe { windows::Win32::Graphics::Gdi::PtInRect(rect, *point).as_bool() }
 }
 
+pub fn reset_taskbar(hwnd: &HWND, rect: &RECT) {
+    unsafe {
+        windows::Win32::Graphics::Gdi::SetWindowRgn(
+            *hwnd,
+            windows::Win32::Graphics::Gdi::HRGN::default(),
+            true,
+        );
+        SetLayeredWindowAttributes(*hwnd, None, 255, LWA_ALPHA);
+        let mut style = GetWindowLongA(*hwnd, GWL_EXSTYLE);
+        if (style & WS_EX_LAYERED.0 as i32) == WS_EX_LAYERED.0 as i32 {
+            SetWindowLongA(
+                *hwnd,
+                GWL_EXSTYLE,
+                GetWindowLongA(*hwnd, GWL_EXSTYLE) ^ WS_EX_LAYERED.0 as i32,
+            );
+        }
+        style = GetWindowLongA(*hwnd, GWL_EXSTYLE);
+        if (style & WS_EX_TRANSPARENT.0 as i32) == WS_EX_TRANSPARENT.0 as i32 {
+            SetWindowLongA(
+                *hwnd,
+                GWL_EXSTYLE,
+                GetWindowLongA(*hwnd, GWL_EXSTYLE) ^ WS_EX_TRANSPARENT.0 as i32,
+            );
+        }
+        // reset taskbar region
+        reset_window_region(rect);
+    }
+}
+
 fn get_rect_of_work_area() -> RECT {
     let mut workarea_rect = RECT::default();
     unsafe {
@@ -209,6 +238,46 @@ fn set_window_region_for_autohide(rect: &RECT) {
 
         /* no call worked, todo: log error */
         eprint!("failed to set workspace area");
+    }
+    /* */
+}
+
+fn reset_window_region(rect: &RECT) {
+    let mut mut_rect = RECT::default();
+    let mut found_primary_display = false;
+    for primary_monitor in monitors::get_monitors().iter().filter(|m| m.is_primary()) {
+        found_primary_display = true;
+        mut_rect = primary_monitor.get_display();
+        let tb_height = rect.bottom - rect.top;
+        mut_rect.bottom = mut_rect.bottom - tb_height;
+    }
+    if !found_primary_display {
+        panic!("could not find primary display while calling reset on exit");
+    }
+    dbg!(mut_rect);
+    unsafe {
+        if windows::Win32::UI::WindowsAndMessaging::SystemParametersInfoW(
+            SPI_SETWORKAREA,
+            0,
+            Some(&mut mut_rect as *mut _ as *mut c_void),
+            SPIF_SENDCHANGE | SPIF_UPDATEINIFILE,
+        )
+        .as_bool()
+        {}
+        /* this happens sometimes on windows 22h2. Call again with spif change */
+        if windows::Win32::UI::WindowsAndMessaging::SystemParametersInfoW(
+            SPI_SETWORKAREA,
+            0,
+            Some(&mut mut_rect as *mut _ as *mut c_void),
+            SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0),
+        )
+        .as_bool()
+        {
+            return;
+        }
+
+        /* no call worked, todo: log error */
+        eprint!("failed to reset workspace area");
     }
     /* */
 }

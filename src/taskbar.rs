@@ -109,4 +109,9 @@ impl Taskbar {
             }
         }
     }
+    pub fn clean_up(&mut self) {
+        if let Some(taskbar_data) = &self.taskbar_data.taskbar {
+            windows_calls::reset_taskbar(&taskbar_data.hwnd, &taskbar_data.rect);
+        }
+    }
 }

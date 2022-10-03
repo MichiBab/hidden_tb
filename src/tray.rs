@@ -1,6 +1,8 @@
 use native_windows_gui as nwg;
 use nwg::NativeUi;
 
+use crate::signaling;
+
 #[derive(Default)]
 pub struct SystemTray {
     window: nwg::MessageWindow,
@@ -18,7 +20,7 @@ impl SystemTray {
 
     fn exit(&self) {
         nwg::stop_thread_dispatch();
-        std::process::exit(0x0);
+        signaling::set_exit_called();
     }
 }
 
