@@ -61,6 +61,12 @@ impl Taskbar {
         }
     }
 
+    pub fn check_and_set_taskbar_transparency_state(&self) {
+        if let Some(taskbar_entry) = &self.taskbar_data.taskbar {
+            windows_calls::check_and_set_transparency_style(&taskbar_entry.hwnd);
+        }
+    }
+
     pub fn hide_taskbar(&mut self) {
         let mut alpha: u8 = 255;
         for step in 0..self.settings.get_animation_steps() {

@@ -17,6 +17,7 @@ fn main() {
     let ui_handle = std::thread::spawn(|| -> () {
         tray::start_tray_icon();
     });
+    let mut infrequent_counter: usize = 0;
     loop {
         if signaling::get_exit_called() {
             break;
@@ -26,10 +27,24 @@ fn main() {
             taskbar.refresh_handles();
             continue;
         }
-        if settings.get_autohide() {
-            windows_calls::check_and_update_workspace_region_for_autohide(&taskbar);
+
+        infrequent_counter %= settings.get_infrequent_count();
+
+        if infrequent_counter == 0 {
+            if settings.get_autohide() {
+                taskbar.check_and_set_taskbar_transparency_state();
+                windows_calls::check_and_update_workspace_region_for_autohide(&taskbar);
+            }
+            taskbar.refresh_handles();
+            if taskbar.contains_none() {
+                taskbar.refresh_handles();
+                continue;
+            }
         }
+
         taskbar.handle_taskbar_state();
+
+        infrequent_counter += 1;
     }
     taskbar.clean_up();
     ui_handle.join().expect("ui thread finished");

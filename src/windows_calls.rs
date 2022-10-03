@@ -143,27 +143,29 @@ fn compare_rect_to_workspace_region_for_autohide(current_rect: &RECT) -> bool {
     workarea_rect.bottom - workarea_rect.top == current_rect.bottom - 1 - current_rect.top
 }
 
-unsafe fn check_and_set_transparency_style(hwnd: &HWND) {
-    /* as i32 */
-    static __GWL_EXSTYLE: i32 = -20;
-    static __WS_EX_TRANSPARENT: i32 = 0x00000020;
+pub fn check_and_set_transparency_style(hwnd: &HWND) {
+    unsafe {
+        /* as i32 */
+        static __GWL_EXSTYLE: i32 = -20;
+        static __WS_EX_TRANSPARENT: i32 = 0x00000020;
 
-    /* check if the style is set to enable transparency first */
-    let current_style = windows::Win32::UI::WindowsAndMessaging::GetWindowLongA(*hwnd, GWL_EXSTYLE);
-    if current_style != WS_EX_LAYERED.0 as i32 | current_style | WS_EX_TOOLWINDOW.0 as i32 {
-        /* set the style to enable transparency */
-        windows::Win32::UI::WindowsAndMessaging::SetWindowLongW(
-            *hwnd,
-            GWL_EXSTYLE,
-            WS_EX_LAYERED.0 as i32 | current_style | WS_EX_TOOLWINDOW.0 as i32,
-        );
-        println!("setting taskbar to layered");
+        /* check if the style is set to enable transparency first */
+        let current_style =
+            windows::Win32::UI::WindowsAndMessaging::GetWindowLongA(*hwnd, GWL_EXSTYLE);
+        if current_style != WS_EX_LAYERED.0 as i32 | current_style | WS_EX_TOOLWINDOW.0 as i32 {
+            /* set the style to enable transparency */
+            windows::Win32::UI::WindowsAndMessaging::SetWindowLongW(
+                *hwnd,
+                GWL_EXSTYLE,
+                WS_EX_LAYERED.0 as i32 | current_style | WS_EX_TOOLWINDOW.0 as i32,
+            );
+            println!("setting taskbar to layered");
+        }
     }
 }
 
 pub fn set_window_alpha(hwnd: &HWND, value: u8) {
     unsafe {
-        check_and_set_transparency_style(hwnd);
         if !(windows::Win32::UI::WindowsAndMessaging::SetLayeredWindowAttributes(
             *hwnd, None, value, LWA_ALPHA,
         ))

@@ -9,6 +9,7 @@ pub struct TbSettings {
     sleep_time_in_ms: u64,
     animation_time_in_ms: u64,
     animation_steps: u8,
+    infrequent_count: usize,
 }
 
 impl TbSettings {
@@ -16,9 +17,10 @@ impl TbSettings {
         //todo load in yaml file
         TbSettings {
             autohide: true,
-            sleep_time_in_ms: 10,
-            animation_time_in_ms: 15,
+            sleep_time_in_ms: 15,
+            animation_time_in_ms: 20,
             animation_steps: 4,
+            infrequent_count: 60,
         }
     }
 
@@ -28,6 +30,10 @@ impl TbSettings {
 
     pub fn get_animation_steps(&self) -> u8 {
         return self.animation_steps;
+    }
+
+    pub fn get_infrequent_count(&self) -> usize {
+        return self.infrequent_count;
     }
 
     pub fn get_autohide(&self) -> bool {
