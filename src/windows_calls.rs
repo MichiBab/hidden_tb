@@ -256,7 +256,6 @@ fn reset_window_region(rect: &RECT) {
     if !found_primary_display {
         panic!("could not find primary display while calling reset on exit");
     }
-    dbg!(mut_rect);
     unsafe {
         if windows::Win32::UI::WindowsAndMessaging::SystemParametersInfoW(
             SPI_SETWORKAREA,
