@@ -1,6 +1,9 @@
-use std::sync::RwLock;
-
 use once_cell::sync::OnceCell;
+use std::error::Error;
+use std::{fs, sync::RwLock};
+type DynErr = Box<dyn Error>;
+
+const FILE_NAME: &str = "settings.json";
 
 /* global settings that are loaded once on start. For any changes, restart. */
 #[derive(Default, Debug, Clone)]
@@ -54,6 +57,39 @@ impl TbSettings {
 
     pub fn get_sleep_time_in_ms(&self) -> u64 {
         self.sleep_time_in_ms
+    }
+
+    pub fn serialize(&self) -> Result<(), Box<dyn Error>> {
+        //check if file exists
+        //if it does, try to delete it
+        //serialize settings as json
+
+        Ok(())
+    }
+
+    pub fn load(&mut self) -> Result<(), DynErr> {
+        //check if file exists
+        //if it doesnt, load defaults and serialize them
+
+        //if it does, load file to string
+        //deserialize string to settings
+        //if it fails, try to delete file
+        //load defaults and serialize them
+        Ok(())
+    }
+
+    pub fn load_defaults() -> TbSettings {
+        let settings = TbSettings {
+            autohide: true,
+            sleep_time_in_ms: 15,
+            animation_time_in_ms: 20,
+            animation_steps: 4,
+            infrequent_count: 60,
+            tb_rect_detection_size_in_pixel: 2,
+            tb_rect_bottom_offset: 1,
+        };
+        settings.serialize().ok();
+        settings
     }
 }
 
