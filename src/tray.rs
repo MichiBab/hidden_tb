@@ -126,10 +126,6 @@ mod system_tray_ui {
 #[inline]
 pub fn start_tray_icon() {
     nwg::init().expect("Failed to init Native Windows GUI");
-    println!("started init");
     let _ui = SystemTray::build_ui(Default::default()).expect("Failed to build UI");
-    println!("started ui");
-
     nwg::dispatch_thread_events();
-    println!("started dispatching");
 }
