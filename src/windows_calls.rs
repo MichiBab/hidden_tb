@@ -7,17 +7,41 @@ use Foundation::RECT;
 
 use crate::monitors;
 use crate::taskbar::Taskbar;
+use crate::tb_settings::TbSettings;
 
 pub const _AUTOHIDE: isize = 0x01;
 pub const _ALWAYS_ON_TOP: isize = 0x02;
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct FormEntry {
     pub hwnd: HWND,
     pub rect: RECT,
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
+pub struct WantedHwnds {
+    pub taskbar: bool,
+    pub tray: bool,
+    pub rebar: bool,
+    pub apps: bool,
+    pub applist: bool,
+}
+
+impl WantedHwnds {
+    pub fn new(_settings: &TbSettings) -> Self {
+        //Currently only the taskbar is needed, so set all other values to false
+        //Later on detect through settings if more is needed
+        WantedHwnds {
+            taskbar: true,
+            tray: false,
+            rebar: false,
+            apps: false,
+            applist: false,
+        }
+    }
+}
+
+#[derive(Default, Debug, Clone)]
 pub struct TaskbarData {
     /*
     taskbar is on top.
@@ -37,6 +61,8 @@ pub struct TaskbarData {
     pub applist: Option<FormEntry>,
 
     pub apps: Option<FormEntry>,
+
+    pub wanted_hwnds: WantedHwnds,
 }
 
 impl FormEntry {
@@ -60,22 +86,39 @@ impl FormEntry {
 }
 
 impl TaskbarData {
-    pub fn new() -> Self {
+    pub fn new(wanted: &WantedHwnds) -> Self {
         let mut data = TaskbarData::default();
         /* Safety: Each string does not contain a \0 character, so the string_to_pcstr will not create an unsafe string representation */
         unsafe {
-            data.taskbar = FormEntry::new(HWND_TOP, "Shell_TrayWnd");
-            if let Some(taskbar) = &data.taskbar {
-                data.tray = FormEntry::new(taskbar.hwnd, "TrayNotifyWnd");
-                data.rebar = FormEntry::new(taskbar.hwnd, "ReBarWindow32");
-                if let Some(rebar) = &data.rebar {
-                    data.applist = FormEntry::new(rebar.hwnd, "MSTaskSwWClass");
-                    if let Some(applist) = &data.applist {
-                        data.apps = FormEntry::new(applist.hwnd, "MSTaskListWClass");
+            data.taskbar = None;
+            if wanted.taskbar {
+                data.taskbar = FormEntry::new(HWND_TOP, "Shell_TrayWnd");
+                if let Some(taskbar) = &data.taskbar {
+                    data.tray = None;
+                    if wanted.tray {
+                        data.tray = FormEntry::new(taskbar.hwnd, "TrayNotifyWnd");
+                    }
+                    data.rebar = None;
+                    if wanted.rebar {
+                        data.rebar = FormEntry::new(taskbar.hwnd, "ReBarWindow32");
+                        if let Some(rebar) = &data.rebar {
+                            data.applist = None;
+                            if wanted.applist {
+                                data.applist = FormEntry::new(rebar.hwnd, "MSTaskSwWClass");
+                                if let Some(applist) = &data.applist {
+                                    data.apps = None;
+                                    if wanted.apps {
+                                        data.apps =
+                                            FormEntry::new(applist.hwnd, "MSTaskListWClass");
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
+        data.wanted_hwnds = wanted.clone();
         data
     }
 }

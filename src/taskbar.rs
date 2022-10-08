@@ -1,5 +1,5 @@
-use crate::tb_settings;
-use crate::windows_calls::{self, _ALWAYS_ON_TOP};
+use crate::tb_settings::{self};
+use crate::windows_calls::{self, WantedHwnds, _ALWAYS_ON_TOP};
 /*  */
 #[derive(Default, Debug)]
 pub struct Taskbar {
@@ -13,9 +13,9 @@ impl Taskbar {
     pub fn new() -> Self {
         let settings = tb_settings::get_tb_settings();
         let step_value = 255 / settings.get_animation_steps();
-
+        let wanted_hwnds = WantedHwnds::new(&settings);
         Taskbar {
-            taskbar_data: windows_calls::TaskbarData::new(),
+            taskbar_data: windows_calls::TaskbarData::new(&wanted_hwnds),
             settings,
             step_value,
             is_hidden: false,
@@ -23,7 +23,7 @@ impl Taskbar {
     }
 
     pub fn refresh_handles(&mut self) {
-        self.taskbar_data = windows_calls::TaskbarData::new();
+        self.taskbar_data = windows_calls::TaskbarData::new(&WantedHwnds::new(&self.settings));
     }
 
     pub fn insert_handles(&mut self, new_tb: Self) {
@@ -38,11 +38,32 @@ impl Taskbar {
     }
 
     pub fn contains_none(&self) -> bool {
-        self.taskbar_data.applist.is_none()
-            || self.taskbar_data.apps.is_none()
-            || self.taskbar_data.rebar.is_none()
-            || self.taskbar_data.tray.is_none()
-            || self.taskbar_data.taskbar.is_none()
+        (self.taskbar_data.applist.is_none() && self.taskbar_data.wanted_hwnds.applist)
+            || (self.taskbar_data.apps.is_none() && self.taskbar_data.wanted_hwnds.apps)
+            || (self.taskbar_data.rebar.is_none() && self.taskbar_data.wanted_hwnds.rebar)
+            || (self.taskbar_data.tray.is_none() && self.taskbar_data.wanted_hwnds.tray)
+            || (self.taskbar_data.taskbar.is_none() && self.taskbar_data.wanted_hwnds.taskbar)
+    }
+
+    pub fn print_which_is_none(&self) {
+        let mut none = "[ ".to_string();
+        if self.taskbar_data.applist.is_none() && self.taskbar_data.wanted_hwnds.applist {
+            none = format!("{}applist ", none);
+        }
+        if self.taskbar_data.apps.is_none() && self.taskbar_data.wanted_hwnds.apps {
+            none = format!("{}; apps ", none);
+        }
+        if self.taskbar_data.rebar.is_none() && self.taskbar_data.wanted_hwnds.rebar {
+            none = format!("{}; rebar ", none);
+        }
+        if self.taskbar_data.tray.is_none() && self.taskbar_data.wanted_hwnds.tray {
+            none = format!("{}; tray ", none);
+        }
+        if self.taskbar_data.taskbar.is_none() && self.taskbar_data.wanted_hwnds.taskbar {
+            none = format!("{}; taskbar", none);
+        }
+        none = format!("{} ]", none);
+        println!("None: {}", none);
     }
 
     pub fn is_hovering_on_tb(&self) -> bool {
@@ -51,8 +72,9 @@ impl Taskbar {
                 let mut hidden_rect = taskbar_entry.rect.clone();
                 hidden_rect.bottom += self.settings.get_tb_rect_bottom_offset();
                 if self.settings.get_autohide() && self.is_hidden {
-                    hidden_rect.top =
-                        hidden_rect.bottom - self.settings.tb_rect_detection_size_in_pixel();
+                    hidden_rect.top = hidden_rect.bottom
+                        - self.settings.get_tb_rect_detection_size_in_pixel()
+                        - self.settings.get_tb_rect_bottom_offset();
                     return windows_calls::get_point_in_rect(&hidden_rect, &cursor_pos);
                 }
                 return windows_calls::get_point_in_rect(&hidden_rect, &cursor_pos);

@@ -3,6 +3,7 @@
 use std::{thread, time};
 use taskbar::Taskbar;
 mod monitors;
+mod settings_ui;
 mod signaling;
 mod taskbar;
 mod tb_settings;
@@ -14,21 +15,25 @@ fn main() {
     let settings = tb_settings::get_tb_settings();
     let dur = time::Duration::from_millis(settings.get_sleep_time_in_ms());
     let mut taskbar = Taskbar::new();
-    // wait until all handles are available
-    while taskbar.contains_none() {
-        taskbar.refresh_handles();
-        thread::sleep(dur);
-        continue;
-    }
-
+    let mut infrequent_counter: usize = 0;
+    let signaling = signaling::get_signaling_struct();
     //spawn system tray icon
     let ui_handle = std::thread::spawn(|| -> () {
         tray::start_tray_icon();
     });
+    // wait until all handles are available
+    while taskbar.contains_none() && !signaling.get_exit_called() {
+        taskbar.print_which_is_none();
+        eprintln!("Waiting for handles...");
+        thread::sleep(time::Duration::from_millis(100));
+        taskbar.refresh_handles();
+        continue;
+    }
 
-    let mut infrequent_counter: usize = 0;
+    println!("got handles, starting tb");
+
     loop {
-        if signaling::get_exit_called() {
+        if signaling.get_exit_called() {
             break;
         }
 
@@ -47,7 +52,12 @@ fn main() {
         taskbar.handle_taskbar_state();
 
         infrequent_counter += 1;
+        thread::sleep(dur);
     }
     taskbar.clean_up();
-    ui_handle.join().expect("ui thread finished");
+    ui_handle.join().expect("tray thread finished");
+
+    if signaling.get_settings_called() {
+        settings_ui::open_ui();
+    }
 }

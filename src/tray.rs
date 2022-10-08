@@ -9,7 +9,8 @@ pub struct SystemTray {
     icon: nwg::Icon,
     tray: nwg::TrayNotification,
     tray_menu: nwg::Menu,
-    tray_item1: nwg::MenuItem,
+    tray_exit_item: nwg::MenuItem,
+    tray_open_settings_item: nwg::MenuItem,
 }
 
 impl SystemTray {
@@ -18,9 +19,14 @@ impl SystemTray {
         self.tray_menu.popup(x, y);
     }
 
+    fn open_settings_ui(&self) {
+        signaling::get_signaling_struct().set_settings_called();
+        self.exit();
+    }
+
     fn exit(&self) {
         nwg::stop_thread_dispatch();
-        signaling::set_exit_called();
+        signaling::get_signaling_struct().set_exit_called();
     }
 }
 
@@ -45,7 +51,7 @@ mod system_tray_ui {
 
             // Resources
             nwg::Icon::builder()
-                .source_file(Some("../.ico")) // TODO add icon
+                .source_file(Some("../hidden_tb.ico"))
                 .build(&mut data.icon)?;
 
             // Controls
@@ -63,9 +69,14 @@ mod system_tray_ui {
                 .build(&mut data.tray_menu)?;
 
             nwg::MenuItem::builder()
+                .text("Open Settings and Close TB")
+                .parent(&data.tray_menu)
+                .build(&mut data.tray_open_settings_item)?;
+
+            nwg::MenuItem::builder()
                 .text("Exit")
                 .parent(&data.tray_menu)
-                .build(&mut data.tray_item1)?;
+                .build(&mut data.tray_exit_item)?;
 
             // Wrap-up
             let ui = SystemTrayUi {
@@ -84,8 +95,11 @@ mod system_tray_ui {
                             }
                         }
                         E::OnMenuItemSelected => {
-                            if &handle == &evt_ui.tray_item1 {
+                            if &handle == &evt_ui.tray_exit_item {
                                 SystemTray::exit(&evt_ui);
+                            }
+                            if &handle == &evt_ui.tray_open_settings_item {
+                                SystemTray::open_settings_ui(&evt_ui);
                             }
                         }
                         _ => {}
