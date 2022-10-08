@@ -51,7 +51,7 @@ mod system_tray_ui {
 
             // Resources
             nwg::Icon::builder()
-                .source_file(Some("../hidden_tb.ico"))
+                .source_file(Some("hidden_tb.ico"))
                 .build(&mut data.icon)?;
 
             // Controls
