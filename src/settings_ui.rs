@@ -2,11 +2,42 @@ use crate::tb_settings::{self, TbSettings};
 use eframe::egui;
 use egui::FontId;
 
+fn load_icon(path: &str) -> eframe::IconData {
+    let (icon_rgba, icon_width, icon_height) = {
+        let image = image::open(path)
+            .expect("Failed to open icon path")
+            .into_rgba8();
+        let (width, height) = image.dimensions();
+        let rgba = image.into_raw();
+        (rgba, width, height)
+    };
+
+    eframe::IconData {
+        rgba: icon_rgba,
+        width: icon_width,
+        height: icon_height,
+    }
+}
+
 pub fn open_ui() {
+    let options = eframe::NativeOptions {
+        icon_data: Some(load_icon("hidden_tb.ico")),
+        transparent: true,
+        max_window_size: Some(egui::vec2(500.0, 700.0)),
+        min_window_size: Some(egui::vec2(500.0, 700.0)),
+        ..Default::default()
+    };
     eframe::run_native(
         "Hidden_TB Settings",
-        eframe::NativeOptions::default(),
-        Box::new(|_cc| Box::new(MyApp::default())),
+        options,
+        Box::new(|cc| {
+            let style = egui::Style {
+                visuals: egui::Visuals::light(),
+                ..egui::Style::default()
+            };
+            cc.egui_ctx.set_style(style);
+            Box::new(MyApp::default())
+        }),
     );
 }
 
