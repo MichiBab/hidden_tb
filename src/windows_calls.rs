@@ -260,6 +260,7 @@ pub fn check_and_update_workspace_region_for_autohide(taskbar: &Taskbar) {
 fn set_window_region_for_autohide(rect: &RECT) {
     let mut mut_rect = rect.clone();
     mut_rect.bottom -= 1;
+    let mut second_call = mut_rect.clone();
     unsafe {
         if windows::Win32::UI::WindowsAndMessaging::SystemParametersInfoW(
             SPI_SETWORKAREA,
@@ -273,7 +274,7 @@ fn set_window_region_for_autohide(rect: &RECT) {
         if windows::Win32::UI::WindowsAndMessaging::SystemParametersInfoW(
             SPI_SETWORKAREA,
             0,
-            Some(&mut mut_rect as *mut _ as *mut c_void),
+            Some(&mut second_call as *mut _ as *mut c_void),
             SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0),
         )
         .as_bool()
