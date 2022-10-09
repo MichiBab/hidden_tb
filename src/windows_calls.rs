@@ -300,6 +300,8 @@ fn reset_window_region(rect: &RECT) {
     if !found_primary_display {
         panic!("could not find primary display while calling reset on exit");
     }
+    let mut second_call = mut_rect.clone();
+
     unsafe {
         if windows::Win32::UI::WindowsAndMessaging::SystemParametersInfoW(
             SPI_SETWORKAREA,
@@ -313,7 +315,7 @@ fn reset_window_region(rect: &RECT) {
         if windows::Win32::UI::WindowsAndMessaging::SystemParametersInfoW(
             SPI_SETWORKAREA,
             0,
-            Some(&mut mut_rect as *mut _ as *mut c_void),
+            Some(&mut second_call as *mut _ as *mut c_void),
             SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0),
         )
         .as_bool()
