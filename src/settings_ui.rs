@@ -157,7 +157,7 @@ impl eframe::App for MyApp {
             ).step_by(1.0));
             ui.add_space(SPACING);
             ui.label(self.formatted_string("Bottom Rect Offset:",));
-            ui.label(self.formatted_small_string("Leave this value at 0. If the tb isn't detected when your mouse hits the bottom of the screen, increase it by one and test again.",));
+            ui.label(self.formatted_small_string("Leave this value at 1 or 0. If the tb isn't detected when your mouse hits the bottom of the screen, increase it by one and test again.",));
             ui.add(egui::Slider::new(
                 &mut self.settings.tb_rect_bottom_offset,
                 0..=5,
