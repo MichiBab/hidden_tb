@@ -340,6 +340,21 @@ fn reset_window_region(rect: &RECT) {
                 return;
             }
         }
+
+        if windows::Win32::UI::WindowsAndMessaging::SystemParametersInfoW(
+            SPI_SETWORKAREA,
+            0,
+            Some(&mut third_call as *mut _ as *mut c_void),
+            SPIF_UPDATEINIFILE,
+        )
+        .as_bool()
+        {
+            if get_rect_of_work_area() == third_call {
+                println!("reset workspace correctly");
+                return;
+            }
+        }
+
         /* this happens sometimes on windows 22h2. Call again with spif change */
         if windows::Win32::UI::WindowsAndMessaging::SystemParametersInfoW(
             SPI_SETWORKAREA,
@@ -350,19 +365,6 @@ fn reset_window_region(rect: &RECT) {
         .as_bool()
         {
             if get_rect_of_work_area() == second_call {
-                println!("reset workspace correctly");
-                return;
-            }
-        }
-        if windows::Win32::UI::WindowsAndMessaging::SystemParametersInfoW(
-            SPI_SETWORKAREA,
-            0,
-            Some(&mut third_call as *mut _ as *mut c_void),
-            SPIF_UPDATEINIFILE,
-        )
-        .as_bool()
-        {
-            if get_rect_of_work_area() == third_call {
                 println!("reset workspace correctly");
                 return;
             }
