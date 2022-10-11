@@ -20,13 +20,13 @@ impl SystemTray {
     }
 
     fn open_settings_ui(&self) {
-        signaling::get_signaling_struct().set_settings_called();
+        signaling::get_signaling_struct().set_settings_called(true);
         self.exit();
     }
 
     fn exit(&self) {
         nwg::stop_thread_dispatch();
-        signaling::get_signaling_struct().set_exit_called();
+        signaling::get_signaling_struct().set_exit_called(true);
     }
 }
 

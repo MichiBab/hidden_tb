@@ -1,4 +1,4 @@
-use crate::tb_settings::{self, TbSettings};
+use crate::{tb_settings::{self, TbSettings}, signaling};
 use eframe::egui;
 use egui::FontId;
 
@@ -98,9 +98,27 @@ impl Default for MyApp {
 }
 
 impl MyApp {
+    fn call_settings_update(&mut self){
+        self.global_settings.set_autohide(self.settings.autohide);
+        self.global_settings
+            .set_animation_steps(self.settings.animation_steps);
+        self.global_settings
+            .set_animation_time_in_ms(self.settings.animation_time_in_ms);
+        self.global_settings
+            .set_sleep_time_in_ms(self.settings.sleep_time_in_ms);
+        self.global_settings
+            .set_infrequent_count(self.settings.infrequent_count);
+        self.global_settings
+            .set_tb_rect_bottom_offset(self.settings.tb_rect_bottom_offset);
+        self.global_settings.set_tb_rect_detection_size_in_pixel(
+            self.settings.tb_rect_detection_size_in_pixel,
+        );
+    }
+
     fn formatted_string(&self, str: &str) -> egui::widget_text::RichText {
         egui::RichText::new(str).font(self.font_id.clone())
     }
+    
 
     fn formatted_small_string(&self, str: &str) -> egui::widget_text::RichText {
         egui::RichText::new(str).font(self.small_font_id.clone())
@@ -164,28 +182,29 @@ impl eframe::App for MyApp {
             ).step_by(1.0));
             ui.add_space(SPACING);
             ui.separator();
+            
+
             if ui
                 .button(self.formatted_string("Save Settings"))
                 .clicked()
             {
-                self.global_settings.set_autohide(self.settings.autohide);
-                self.global_settings
-                    .set_animation_steps(self.settings.animation_steps);
-                self.global_settings
-                    .set_animation_time_in_ms(self.settings.animation_time_in_ms);
-                self.global_settings
-                    .set_sleep_time_in_ms(self.settings.sleep_time_in_ms);
-                self.global_settings
-                    .set_infrequent_count(self.settings.infrequent_count);
-                self.global_settings
-                    .set_tb_rect_bottom_offset(self.settings.tb_rect_bottom_offset);
-                self.global_settings.set_tb_rect_detection_size_in_pixel(
-                    self.settings.tb_rect_detection_size_in_pixel,
-                );
-                self.info_string = self.formatted_small_string("Settings applied. Close the Settings and start hidden_tb.exe with the new config applied.");
+                self.call_settings_update();
+                self.info_string = self.formatted_small_string("Settings saved.");
+            }
+
+            if ui
+                .button(self.formatted_small_string("Save and Set to Restart on Close."))
+                .clicked()
+            {
+                self.call_settings_update();
+                self.info_string = self.formatted_small_string("Settings applied. Close this window to restart the taskbar.");
+                signaling::get_signaling_struct().set_reset_called(true);             
             }
 
             ui.label(self.info_string.clone());
         });
+
+        
     }
+    
 }

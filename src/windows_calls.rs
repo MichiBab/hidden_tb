@@ -260,55 +260,44 @@ pub fn check_and_update_workspace_region_for_autohide(taskbar: &Taskbar) {
 fn set_window_region_for_autohide(rect: &RECT) {
     let mut mut_rect = rect.clone();
     mut_rect.bottom -= 1;
-    let mut second_call = mut_rect.clone();
-    let mut third_call = mut_rect.clone();
-
     unsafe {
+        if call_and_check_set_window_region(
+            &mut_rect,
+            &[
+                SPIF_SENDCHANGE | SPIF_UPDATEINIFILE,
+                SPIF_UPDATEINIFILE,
+                SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0),
+            ],
+        ) {
+            return;
+        }
+        /* no call worked, todo: log error */
+        eprint!("failed to reset workspace area");
+    }
+    /* */
+}
+
+unsafe fn call_and_check_set_window_region(
+    rect: &RECT,
+    call_options: &[SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS],
+) -> bool {
+    for call_option in call_options {
+        let mut mut_rect = rect.clone();
         if windows::Win32::UI::WindowsAndMessaging::SystemParametersInfoW(
             SPI_SETWORKAREA,
             0,
             Some(&mut mut_rect as *mut _ as *mut c_void),
-            SPIF_SENDCHANGE | SPIF_UPDATEINIFILE,
+            *call_option,
         )
         .as_bool()
         {
             if get_rect_of_work_area() == mut_rect {
-                println!("set workspace correctly");
-                return;
+                println!("changed workspace correctly");
+                return true;
             }
         }
-        /* this happens sometimes on windows 22h2. Call again with spif change */
-        if windows::Win32::UI::WindowsAndMessaging::SystemParametersInfoW(
-            SPI_SETWORKAREA,
-            0,
-            Some(&mut second_call as *mut _ as *mut c_void),
-            SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0),
-        )
-        .as_bool()
-        {
-            if get_rect_of_work_area() == second_call {
-                println!("set workspace correctly");
-                return;
-            }
-        }
-        if windows::Win32::UI::WindowsAndMessaging::SystemParametersInfoW(
-            SPI_SETWORKAREA,
-            0,
-            Some(&mut third_call as *mut _ as *mut c_void),
-            SPIF_UPDATEINIFILE,
-        )
-        .as_bool()
-        {
-            if get_rect_of_work_area() == third_call {
-                println!("set workspace correctly");
-                return;
-            }
-        }
-
-        /* no call worked, todo: log error */
-        eprintln!("failed to set workspace area");
     }
-    /* */
+    false
 }
 
 fn reset_window_region(rect: &RECT) {
@@ -323,53 +312,18 @@ fn reset_window_region(rect: &RECT) {
     if !found_primary_display {
         panic!("could not find primary display while calling reset on exit");
     }
-    let mut second_call = mut_rect.clone();
-    let mut third_call = mut_rect.clone();
 
     unsafe {
-        if windows::Win32::UI::WindowsAndMessaging::SystemParametersInfoW(
-            SPI_SETWORKAREA,
-            0,
-            Some(&mut mut_rect as *mut _ as *mut c_void),
-            SPIF_SENDCHANGE | SPIF_UPDATEINIFILE,
-        )
-        .as_bool()
-        {
-            if get_rect_of_work_area() == mut_rect {
-                println!("reset workspace correctly");
-                return;
-            }
+        if call_and_check_set_window_region(
+            &mut_rect,
+            &[
+                SPIF_SENDCHANGE | SPIF_UPDATEINIFILE,
+                SPIF_UPDATEINIFILE,
+                SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0),
+            ],
+        ) {
+            return;
         }
-
-        if windows::Win32::UI::WindowsAndMessaging::SystemParametersInfoW(
-            SPI_SETWORKAREA,
-            0,
-            Some(&mut third_call as *mut _ as *mut c_void),
-            SPIF_UPDATEINIFILE,
-        )
-        .as_bool()
-        {
-            if get_rect_of_work_area() == third_call {
-                println!("reset workspace correctly");
-                return;
-            }
-        }
-
-        /* this happens sometimes on windows 22h2. Call again with spif change */
-        if windows::Win32::UI::WindowsAndMessaging::SystemParametersInfoW(
-            SPI_SETWORKAREA,
-            0,
-            Some(&mut second_call as *mut _ as *mut c_void),
-            SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0),
-        )
-        .as_bool()
-        {
-            if get_rect_of_work_area() == second_call {
-                println!("reset workspace correctly");
-                return;
-            }
-        }
-
         /* no call worked, todo: log error */
         eprint!("failed to reset workspace area");
     }

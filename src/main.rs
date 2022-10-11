@@ -10,8 +10,7 @@ mod tb_settings;
 mod tray;
 mod windows_calls;
 
-fn main() {
-    windows_calls::initialize_windows_calls();
+fn start_hidden_tb() {
     let settings = tb_settings::get_tb_settings();
     let dur = time::Duration::from_millis(settings.get_sleep_time_in_ms());
     let mut taskbar = Taskbar::new();
@@ -59,5 +58,21 @@ fn main() {
 
     if signaling.get_settings_called() {
         settings_ui::open_ui();
+    }
+}
+
+fn main() {
+    windows_calls::initialize_windows_calls();
+
+    loop {
+        start_hidden_tb();
+        //check if settings were called with reset
+        if !signaling::get_signaling_struct().get_reset_called() {
+            return;
+        } else {
+            signaling::get_signaling_struct().set_reset_called(false);
+            signaling::get_signaling_struct().set_exit_called(false);
+            signaling::get_signaling_struct().set_settings_called(false);
+        }
     }
 }
