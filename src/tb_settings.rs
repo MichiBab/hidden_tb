@@ -1,9 +1,7 @@
-use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::fs::File;
 use std::path::PathBuf;
-use std::sync::RwLock;
 
 const FILE_NAME: &str = "settings.json";
 
@@ -20,7 +18,7 @@ pub struct TbSettings {
 }
 
 impl TbSettings {
-    fn new() -> Self {
+    pub fn new() -> Self {
         match Self::try_load() {
             Some(settings) => {
                 println!("settings loaded from file");
@@ -181,16 +179,4 @@ impl TbSettings {
         rsrc_dir.push(FILE_NAME);
         rsrc_dir
     }
-}
-
-pub fn get_tb_settings() -> TbSettings {
-    if let Ok(settings_lock) = get_settings_lock().read() {
-        return settings_lock.clone();
-    }
-    TbSettings::load_defaults()
-}
-
-fn get_settings_lock() -> &'static RwLock<TbSettings> {
-    static INSTANCE: OnceCell<RwLock<TbSettings>> = OnceCell::new();
-    INSTANCE.get_or_init(|| RwLock::new(TbSettings::new()))
 }

@@ -2,6 +2,8 @@
 
 use std::{thread, time};
 use taskbar::Taskbar;
+
+use crate::tb_settings::TbSettings;
 mod monitors;
 mod settings_ui;
 mod signaling;
@@ -11,7 +13,7 @@ mod tray;
 mod windows_calls;
 
 fn start_hidden_tb() {
-    let settings = tb_settings::get_tb_settings();
+    let settings = TbSettings::new();
     let dur = time::Duration::from_millis(settings.get_sleep_time_in_ms());
     let mut taskbar = Taskbar::new();
     let mut infrequent_counter: usize = 0;
@@ -42,7 +44,7 @@ fn start_hidden_tb() {
                 taskbar.check_and_set_taskbar_transparency_state();
                 windows_calls::check_and_update_workspace_region_for_autohide(&taskbar);
             }
-            let new_handles = Taskbar::new();
+            let new_handles = taskbar.fetch_new_handles();
             if !new_handles.contains_none() {
                 taskbar.insert_handles(new_handles);
             }

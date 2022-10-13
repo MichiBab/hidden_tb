@@ -1,4 +1,4 @@
-use crate::{tb_settings::{self, TbSettings}, signaling};
+use crate::{tb_settings::{ TbSettings}, signaling};
 use eframe::egui;
 use egui::FontId;
 
@@ -39,6 +39,7 @@ pub fn open_ui() {
             Box::new(MyApp::default())
         }),
     );
+
 }
 
 pub struct TbAccessibleSettings {
@@ -86,7 +87,8 @@ struct MyApp {
 
 impl Default for MyApp {
     fn default() -> Self {
-        let tb_settings = tb_settings::get_tb_settings();
+        let tb_settings = TbSettings::new();
+        dbg!(&tb_settings);
         Self {
             global_settings: tb_settings.clone(),
             settings: TbAccessibleSettings::from(&tb_settings),

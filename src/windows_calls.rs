@@ -121,6 +121,14 @@ impl TaskbarData {
         data.wanted_hwnds = wanted.clone();
         data
     }
+
+    pub fn contains_none(&self) -> bool {
+        (self.applist.is_none() && self.wanted_hwnds.applist)
+            || (self.apps.is_none() && self.wanted_hwnds.apps)
+            || (self.rebar.is_none() && self.wanted_hwnds.rebar)
+            || (self.tray.is_none() && self.wanted_hwnds.tray)
+            || (self.taskbar.is_none() && self.wanted_hwnds.taskbar)
+    }
 }
 
 /* if the input str contains \0, this function will be unsafe */

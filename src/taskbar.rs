@@ -1,5 +1,5 @@
-use crate::tb_settings::{self};
-use crate::windows_calls::{self, WantedHwnds, _ALWAYS_ON_TOP};
+use crate::tb_settings::{self, TbSettings};
+use crate::windows_calls::{self, TaskbarData, WantedHwnds, _ALWAYS_ON_TOP};
 /*  */
 #[derive(Default, Debug)]
 pub struct Taskbar {
@@ -11,7 +11,7 @@ pub struct Taskbar {
 
 impl Taskbar {
     pub fn new() -> Self {
-        let settings = tb_settings::get_tb_settings();
+        let settings = TbSettings::new();
         let step_value = 255 / settings.get_animation_steps();
         let wanted_hwnds = WantedHwnds::new(&settings);
         Taskbar {
@@ -26,8 +26,12 @@ impl Taskbar {
         self.taskbar_data = windows_calls::TaskbarData::new(&WantedHwnds::new(&self.settings));
     }
 
-    pub fn insert_handles(&mut self, new_tb: Self) {
-        self.taskbar_data = new_tb.taskbar_data;
+    pub fn fetch_new_handles(&self) -> TaskbarData {
+        windows_calls::TaskbarData::new(&WantedHwnds::new(&self.settings))
+    }
+
+    pub fn insert_handles(&mut self, new_tb_data: TaskbarData) {
+        self.taskbar_data = new_tb_data;
     }
 
     pub fn refresh_area_and_set_on_top(&self) {
@@ -38,11 +42,7 @@ impl Taskbar {
     }
 
     pub fn contains_none(&self) -> bool {
-        (self.taskbar_data.applist.is_none() && self.taskbar_data.wanted_hwnds.applist)
-            || (self.taskbar_data.apps.is_none() && self.taskbar_data.wanted_hwnds.apps)
-            || (self.taskbar_data.rebar.is_none() && self.taskbar_data.wanted_hwnds.rebar)
-            || (self.taskbar_data.tray.is_none() && self.taskbar_data.wanted_hwnds.tray)
-            || (self.taskbar_data.taskbar.is_none() && self.taskbar_data.wanted_hwnds.taskbar)
+        self.taskbar_data.contains_none()
     }
 
     pub fn print_which_is_none(&self) {
