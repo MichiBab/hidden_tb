@@ -32,6 +32,7 @@ impl Taskbar {
 
     pub fn insert_handles(&mut self, new_tb_data: TaskbarData) {
         self.taskbar_data = new_tb_data;
+        self.on_new_handles();
     }
 
     pub fn refresh_area_and_set_on_top(&self) {
@@ -123,6 +124,28 @@ impl Taskbar {
             ));
         }
         self.is_hidden = false;
+    }
+
+    fn merge_tray_with_applist(&mut self) {
+        if let Some(tray_entry) = &self.taskbar_data.tray {
+            if let Some(apps_entry) = &self.taskbar_data.apps {
+                //Todo: maybe can call LockWindowUpdate so it doesnt update the window on pressing the up arrow button on the tray
+                windows_calls::move_window_on_tb(&tray_entry.hwnd, apps_entry.rect.right, 0);
+            }
+        }
+    }
+
+    fn merge_widgets_with_applist(&mut self) {
+        //TODO
+    }
+
+    pub fn on_new_handles(&mut self) {
+        if self.settings.get_merge_tray() {
+            self.merge_tray_with_applist();
+        }
+        if self.settings.get_merge_widgets() {
+            self.merge_widgets_with_applist();
+        }
     }
 
     pub fn handle_taskbar_state(&mut self) {

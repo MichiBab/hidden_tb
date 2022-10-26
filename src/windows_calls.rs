@@ -28,16 +28,23 @@ pub struct WantedHwnds {
 }
 
 impl WantedHwnds {
-    pub fn new(_settings: &TbSettings) -> Self {
+    pub fn new(settings: &TbSettings) -> Self {
         //Currently only the taskbar is needed, so set all other values to false
         //Later on detect through settings if more is needed
-        WantedHwnds {
+        let mut wanted_hwnds = WantedHwnds {
             taskbar: true,
             tray: false,
             rebar: false,
             apps: false,
             applist: false,
+        };
+        if settings.get_merge_tray() {
+            wanted_hwnds.tray = true;
+            wanted_hwnds.rebar = true;
+            wanted_hwnds.applist = true;
+            wanted_hwnds.apps = true;
         }
+        wanted_hwnds
     }
 }
 
@@ -343,6 +350,32 @@ pub fn initialize_windows_calls() {
         /* Initialize system com to retrieve taskbar state in get start menu open function. Safety: None as parameter. */
         if let Err(_) = windows::Win32::System::Com::CoInitialize(None) { /* todo: log error */ }
     }
+}
+
+pub fn move_window_on_tb(hwnd: &HWND, x: i32, y: i32) -> bool {
+    unsafe {
+        move_window(
+            hwnd,
+            HWND_TOPMOST,
+            x,
+            y,
+            0,
+            0,
+            SWP_NOSENDCHANGING | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER | SWP_ASYNCWINDOWPOS,
+        )
+    }
+}
+
+unsafe fn move_window(
+    hwnd: &HWND,
+    position: HWND,
+    x: i32,
+    y: i32,
+    width: i32,
+    height: i32,
+    flag: SET_WINDOW_POS_FLAGS,
+) -> bool {
+    SetWindowPos(*hwnd, position, x, y, width, height, flag).as_bool()
 }
 
 pub fn get_start_menu_open() -> bool {

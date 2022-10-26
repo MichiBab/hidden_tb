@@ -1,4 +1,4 @@
-#![windows_subsystem = "windows"]
+//#![windows_subsystem = "windows"]
 
 use std::{thread, time};
 use taskbar::Taskbar;
@@ -33,6 +33,10 @@ fn start_hidden_tb() {
 
     println!("got handles, starting tb");
 
+    //handles have to be updated on every loop if a merging option is enabled, to react to applist changes.
+    let update_handles_in_infrequent_routine =
+        !(settings.get_merge_tray() || settings.get_merge_widgets());
+
     loop {
         if signaling.get_exit_called() {
             break;
@@ -44,6 +48,15 @@ fn start_hidden_tb() {
                 taskbar.check_and_set_taskbar_transparency_state();
                 windows_calls::check_and_update_workspace_region_for_autohide(&taskbar);
             }
+            if update_handles_in_infrequent_routine {
+                let new_handles = taskbar.fetch_new_handles();
+                if !new_handles.contains_none() {
+                    taskbar.insert_handles(new_handles);
+                }
+            }
+        }
+
+        if !update_handles_in_infrequent_routine {
             let new_handles = taskbar.fetch_new_handles();
             if !new_handles.contains_none() {
                 taskbar.insert_handles(new_handles);

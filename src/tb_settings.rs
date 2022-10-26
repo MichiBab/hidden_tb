@@ -9,6 +9,8 @@ const FILE_NAME: &str = "settings.json";
 #[derive(Serialize, Deserialize, Default, Debug, Clone)]
 pub struct TbSettings {
     autohide: bool,
+    merge_tray: bool,
+    merge_widgets: bool,
     sleep_time_in_ms: u64,
     animation_time_in_ms: u64,
     animation_steps: u8,
@@ -35,6 +37,8 @@ impl TbSettings {
     fn load_defaults() -> TbSettings {
         TbSettings {
             autohide: true,
+            merge_tray: false,
+            merge_widgets: false,
             sleep_time_in_ms: 15,
             animation_time_in_ms: 12,
             animation_steps: 6,
@@ -48,7 +52,6 @@ impl TbSettings {
         self.animation_time_in_ms
     }
 
-    #[allow(dead_code)]
     pub fn set_animation_time_in_ms(&mut self, value: u64) {
         if self.animation_time_in_ms == value {
             return;
@@ -61,7 +64,30 @@ impl TbSettings {
         self.tb_rect_detection_size_in_pixel
     }
 
-    #[allow(dead_code)]
+    pub fn get_merge_tray(&self) -> bool {
+        self.merge_tray
+    }
+
+    pub fn set_merge_tray(&mut self, value: bool) {
+        if self.merge_tray == value {
+            return;
+        }
+        self.merge_tray = value;
+        self.try_save();
+    }
+
+    pub fn get_merge_widgets(&self) -> bool {
+        self.merge_widgets
+    }
+
+    pub fn set_merge_widgets(&mut self, value: bool) {
+        if self.merge_widgets == value {
+            return;
+        }
+        self.merge_widgets = value;
+        self.try_save();
+    }
+
     pub fn set_tb_rect_detection_size_in_pixel(&mut self, value: i32) {
         if self.tb_rect_detection_size_in_pixel == value {
             return;
@@ -74,7 +100,6 @@ impl TbSettings {
         self.tb_rect_bottom_offset
     }
 
-    #[allow(dead_code)]
     pub fn set_tb_rect_bottom_offset(&mut self, value: i32) {
         if self.tb_rect_bottom_offset == value {
             return;
@@ -87,7 +112,6 @@ impl TbSettings {
         self.animation_steps
     }
 
-    #[allow(dead_code)]
     pub fn set_animation_steps(&mut self, value: u8) {
         if self.animation_steps == value {
             return;
@@ -100,7 +124,6 @@ impl TbSettings {
         self.infrequent_count
     }
 
-    #[allow(dead_code)]
     pub fn set_infrequent_count(&mut self, value: usize) {
         if self.infrequent_count == value {
             return;
@@ -113,7 +136,6 @@ impl TbSettings {
         self.autohide
     }
 
-    #[allow(dead_code)]
     pub fn set_autohide(&mut self, value: bool) {
         if self.autohide == value {
             return;
@@ -126,7 +148,6 @@ impl TbSettings {
         self.sleep_time_in_ms
     }
 
-    #[allow(dead_code)]
     pub fn set_sleep_time_in_ms(&mut self, value: u64) {
         if self.sleep_time_in_ms == value {
             return;

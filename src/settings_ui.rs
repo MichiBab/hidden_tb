@@ -44,6 +44,8 @@ pub fn open_ui() {
 
 pub struct TbAccessibleSettings {
     autohide: bool,
+    merge_tray: bool,
+    merge_widgets: bool,
     sleep_time_in_ms: u64,
     animation_time_in_ms: u64,
     animation_steps: u8,
@@ -57,6 +59,8 @@ impl TbAccessibleSettings {
         Self {
             autohide: settings.get_autohide(),
             sleep_time_in_ms: settings.get_sleep_time_in_ms(),
+            merge_tray: settings.get_merge_tray(),
+            merge_widgets: settings.get_merge_widgets(),
             animation_time_in_ms: settings.get_animation_time_in_ms(),
             animation_steps: settings.get_animation_steps(),
             infrequent_count: settings.get_infrequent_count(),
@@ -67,6 +71,8 @@ impl TbAccessibleSettings {
 
     fn is_equal(&self, settings: &TbSettings) -> bool {
         self.autohide == settings.get_autohide()
+            && self.merge_tray == settings.get_merge_tray()
+            && self.merge_widgets == settings.get_merge_widgets()
             && self.sleep_time_in_ms == settings.get_sleep_time_in_ms()
             && self.animation_time_in_ms == settings.get_animation_time_in_ms()
             && self.animation_steps == settings.get_animation_steps()
@@ -101,6 +107,8 @@ impl Default for MyApp {
 
 impl MyApp {
     fn call_settings_update(&mut self){
+        self.global_settings.set_merge_tray(self.settings.merge_tray);
+        self.global_settings.set_merge_widgets(self.settings.merge_widgets);
         self.global_settings.set_autohide(self.settings.autohide);
         self.global_settings
             .set_animation_steps(self.settings.animation_steps);
@@ -182,6 +190,12 @@ impl eframe::App for MyApp {
                 &mut self.settings.tb_rect_bottom_offset,
                 0..=5,
             ).step_by(1.0));
+            ui.add_space(SPACING);
+            let check_box_text = self.formatted_string("merge tray with applist");
+            ui.checkbox(&mut self.settings.merge_tray, check_box_text);
+            ui.add_space(SPACING);
+            let check_box_text = self.formatted_string("merge widget with applist");
+            ui.checkbox(&mut self.settings.merge_widgets, check_box_text);
             ui.add_space(SPACING);
             ui.separator();
             
