@@ -1,8 +1,6 @@
 use std::ffi::c_void;
 use windows::Win32::Foundation::POINT;
-use windows::Win32::Graphics::Gdi::{
-    CombineRgn, CreateRectRgn, CreateRoundRectRgn, GetWindowRgn, SetWindowRgn, HRGN,
-};
+use windows::Win32::Graphics::Gdi::{CombineRgn, CreateRoundRectRgn, SetWindowRgn};
 use windows::Win32::UI::Shell::{IAppVisibility, APPBARDATA};
 use windows::Win32::{Foundation, UI::WindowsAndMessaging::*};
 use Foundation::HWND;
@@ -164,27 +162,6 @@ pub fn get_point_in_rect(rect: &RECT, point: &POINT) -> bool {
     unsafe { windows::Win32::Graphics::Gdi::PtInRect(rect, *point).as_bool() }
 }
 
-#[derive(Default, Debug, Clone)]
-struct Region {
-    radius: i32,
-    top: i32,
-    left: i32,
-    width: i32,
-    height: i32,
-}
-
-impl Region {
-    fn new(radius: i32, top: i32, left: i32, width: i32, height: i32) -> Region {
-        Region {
-            radius,
-            top,
-            left,
-            width,
-            height,
-        }
-    }
-}
-
 pub fn create_rounded_region(settings: &TbSettings, tb_data: &TaskbarData) {
     if let Some(taskbar_entry) = &tb_data.taskbar {
         if let Some(tray_entry) = &tb_data.tray {
@@ -205,7 +182,19 @@ pub fn create_rounded_region(settings: &TbSettings, tb_data: &TaskbarData) {
                         settings.get_rounded_corners_size(),
                     );
 
+                    let mut show_tray = false;
                     if settings.get_dynamic_borders_show_tray() {
+                        show_tray = true;
+                    } else {
+                        if settings.get_dynamic_borders_show_tray_if_disabled_on_hover() {
+                            if let Some(cursor_pos) = get_cursor_pos() {
+                                if get_point_in_rect(&tray_entry.rect, &cursor_pos) {
+                                    show_tray = true;
+                                }
+                            }
+                        }
+                    }
+                    if show_tray {
                         let tray_region = CreateRoundRectRgn(
                             (tray_entry.rect.left as f64 * resolution) as i32
                                 + settings.get_margin_left(),

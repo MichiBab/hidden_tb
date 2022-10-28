@@ -19,6 +19,7 @@ pub struct TbSettings {
     tb_rect_detection_size_in_pixel: i32,
     enable_dynamic_borders: bool,
     dynamic_borders_show_tray: bool,
+    dynamic_borders_show_tray_if_disabled_on_hover: bool,
     dynamic_borders_show_widgets: bool,
     rounded_corners_size: i32,
     margin_left: i32,
@@ -54,7 +55,8 @@ impl TbSettings {
             tb_rect_detection_size_in_pixel: 2,
             tb_rect_bottom_offset: 1,
             enable_dynamic_borders: true,
-            dynamic_borders_show_tray: false,
+            dynamic_borders_show_tray: true,
+            dynamic_borders_show_tray_if_disabled_on_hover: true,
             dynamic_borders_show_widgets: false,
             rounded_corners_size: 0,
             margin_left: 0,
@@ -62,6 +64,18 @@ impl TbSettings {
             margin_bottom: 0,
             margin_top: 0,
         }
+    }
+
+    pub fn get_dynamic_borders_show_tray_if_disabled_on_hover(&self) -> bool {
+        self.dynamic_borders_show_tray_if_disabled_on_hover
+    }
+
+    pub fn set_dynamic_borders_show_tray_if_disabled_on_hover(&mut self, value: bool) {
+        if self.dynamic_borders_show_tray_if_disabled_on_hover == value {
+            return;
+        }
+        self.dynamic_borders_show_tray_if_disabled_on_hover = value;
+        self.try_save();
     }
 
     pub fn get_margin_top(&self) -> i32 {

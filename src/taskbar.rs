@@ -8,6 +8,7 @@ pub struct Taskbar {
     last_taskbar_data: windows_calls::TaskbarData,
     is_hidden: bool,
     step_value: u8,
+    tray_shown_currently: bool,
 }
 
 impl Taskbar {
@@ -21,6 +22,7 @@ impl Taskbar {
             settings,
             step_value,
             is_hidden: false,
+            tray_shown_currently: false,
         }
     }
 
@@ -190,6 +192,29 @@ impl Taskbar {
     pub fn handle_taskbar_state(&mut self) {
         if !self.settings.get_autohide() {
             return;
+        }
+
+        /* for autohiding tray logic */
+        if !self.settings.get_dynamic_borders_show_tray()
+            && self
+                .settings
+                .get_dynamic_borders_show_tray_if_disabled_on_hover()
+        {
+            if let Some(tray_entry) = &self.taskbar_data.tray {
+                if let Some(cursor_pos) = windows_calls::get_cursor_pos() {
+                    if windows_calls::get_point_in_rect(&tray_entry.rect, &cursor_pos) {
+                        if !self.tray_shown_currently {
+                            self.tray_shown_currently = true;
+                            self.call_dynamic_update();
+                        }
+                    } else {
+                        if self.tray_shown_currently {
+                            self.tray_shown_currently = false;
+                            self.call_dynamic_update();
+                        }
+                    }
+                }
+            }
         }
 
         let start_menu_open = windows_calls::get_start_menu_open();
