@@ -17,6 +17,14 @@ pub struct TbSettings {
     infrequent_count: usize,
     tb_rect_bottom_offset: i32,
     tb_rect_detection_size_in_pixel: i32,
+    enable_dynamic_borders: bool,
+    dynamic_borders_show_tray: bool,
+    dynamic_borders_show_widgets: bool,
+    rounded_corners_size: i32,
+    margin_left: i32,
+    margin_right: i32,
+    margin_bottom: i32,
+    margin_top: i32,
 }
 
 impl TbSettings {
@@ -45,7 +53,111 @@ impl TbSettings {
             infrequent_count: 60,
             tb_rect_detection_size_in_pixel: 2,
             tb_rect_bottom_offset: 1,
+            enable_dynamic_borders: true,
+            dynamic_borders_show_tray: false,
+            dynamic_borders_show_widgets: false,
+            rounded_corners_size: 0,
+            margin_left: 0,
+            margin_right: 0,
+            margin_bottom: 0,
+            margin_top: 0,
         }
+    }
+
+    pub fn get_margin_top(&self) -> i32 {
+        self.margin_top
+    }
+
+    pub fn set_margin_top(&mut self, value: i32) {
+        if self.margin_top == value {
+            return;
+        }
+        self.margin_top = value;
+        self.try_save();
+    }
+
+    pub fn get_margin_bottom(&self) -> i32 {
+        self.margin_bottom
+    }
+
+    pub fn set_margin_bottom(&mut self, value: i32) {
+        if self.margin_bottom == value {
+            return;
+        }
+        self.margin_bottom = value;
+        self.try_save();
+    }
+
+    pub fn get_margin_left(&self) -> i32 {
+        self.margin_left
+    }
+
+    pub fn set_margin_left(&mut self, value: i32) {
+        if self.margin_left == value {
+            return;
+        }
+        self.margin_left = value;
+        self.try_save();
+    }
+
+    pub fn get_margin_right(&self) -> i32 {
+        self.margin_right
+    }
+
+    pub fn set_margin_right(&mut self, value: i32) {
+        if self.margin_right == value {
+            return;
+        }
+        self.margin_right = value;
+        self.try_save();
+    }
+
+    pub fn get_enable_dynamic_borders(&self) -> bool {
+        self.enable_dynamic_borders
+    }
+
+    pub fn set_enable_dynamic_borders(&mut self, value: bool) {
+        if self.enable_dynamic_borders == value {
+            return;
+        }
+        self.enable_dynamic_borders = value;
+        self.try_save();
+    }
+
+    pub fn get_dynamic_borders_show_tray(&self) -> bool {
+        self.dynamic_borders_show_tray
+    }
+
+    pub fn set_dynamic_borders_show_tray(&mut self, value: bool) {
+        if self.dynamic_borders_show_tray == value {
+            return;
+        }
+        self.dynamic_borders_show_tray = value;
+        self.try_save();
+    }
+
+    pub fn get_dynamic_borders_show_widgets(&self) -> bool {
+        self.dynamic_borders_show_widgets
+    }
+
+    pub fn set_dynamic_borders_show_widgets(&mut self, value: bool) {
+        if self.dynamic_borders_show_widgets == value {
+            return;
+        }
+        self.dynamic_borders_show_widgets = value;
+        self.try_save();
+    }
+
+    pub fn get_rounded_corners_size(&self) -> i32 {
+        self.rounded_corners_size
+    }
+
+    pub fn set_rounded_corners_size(&mut self, value: i32) {
+        if self.rounded_corners_size == value {
+            return;
+        }
+        self.rounded_corners_size = value;
+        self.try_save();
     }
 
     pub fn get_animation_time_in_ms(&self) -> u64 {

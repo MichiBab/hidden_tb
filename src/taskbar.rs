@@ -5,6 +5,7 @@ use crate::windows_calls::{self, TaskbarData, WantedHwnds, _ALWAYS_ON_TOP};
 pub struct Taskbar {
     settings: tb_settings::TbSettings,
     taskbar_data: windows_calls::TaskbarData,
+    last_taskbar_data: windows_calls::TaskbarData,
     is_hidden: bool,
     step_value: u8,
 }
@@ -15,7 +16,8 @@ impl Taskbar {
         let step_value = 255 / settings.get_animation_steps();
         let wanted_hwnds = WantedHwnds::new(&settings);
         Taskbar {
-            taskbar_data: windows_calls::TaskbarData::new(&wanted_hwnds),
+            last_taskbar_data: windows_calls::TaskbarData::new(&wanted_hwnds),
+            taskbar_data: TaskbarData::default(),
             settings,
             step_value,
             is_hidden: false,
@@ -23,14 +25,18 @@ impl Taskbar {
     }
 
     pub fn refresh_handles(&mut self) {
-        self.taskbar_data = windows_calls::TaskbarData::new(&WantedHwnds::new(&self.settings));
+        let taskbar_data = windows_calls::TaskbarData::new(&WantedHwnds::new(&self.settings));
+        self.taskbar_data = taskbar_data.clone();
+        self.last_taskbar_data = taskbar_data;
     }
 
     pub fn fetch_new_handles(&self) -> TaskbarData {
         windows_calls::TaskbarData::new(&WantedHwnds::new(&self.settings))
     }
 
+    /* calls on_new_handles to update all routines that have to react on new handles. */
     pub fn insert_handles(&mut self, new_tb_data: TaskbarData) {
+        self.last_taskbar_data = self.taskbar_data.clone();
         self.taskbar_data = new_tb_data;
         self.on_new_handles();
     }
@@ -139,12 +145,45 @@ impl Taskbar {
         //TODO
     }
 
+    fn update_dynamic_borders(&mut self) {
+        //create region
+        let mut nothing_changed = true;
+        if let Some(last_applist) = &self.last_taskbar_data.applist {
+            if let Some(current_applist) = &self.taskbar_data.applist {
+                if last_applist.rect != current_applist.rect {
+                    nothing_changed = false;
+                }
+            }
+        }
+        if self.settings.get_dynamic_borders_show_tray() {
+            if let Some(last_tray) = &self.last_taskbar_data.tray {
+                if let Some(current_tray) = &self.taskbar_data.tray {
+                    if last_tray.rect != current_tray.rect {
+                        nothing_changed = false;
+                    }
+                }
+            }
+        }
+
+        if nothing_changed {
+            return;
+        }
+        self.call_dynamic_update();
+    }
+
+    pub fn call_dynamic_update(&mut self) {
+        windows_calls::create_rounded_region(&self.settings, &self.taskbar_data);
+    }
+
     pub fn on_new_handles(&mut self) {
         if self.settings.get_merge_tray() {
             self.merge_tray_with_applist();
         }
         if self.settings.get_merge_widgets() {
             self.merge_widgets_with_applist();
+        }
+        if self.settings.get_enable_dynamic_borders() {
+            self.update_dynamic_borders();
         }
     }
 

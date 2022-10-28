@@ -1,5 +1,8 @@
 use std::ffi::c_void;
 use windows::Win32::Foundation::POINT;
+use windows::Win32::Graphics::Gdi::{
+    CombineRgn, CreateRectRgn, CreateRoundRectRgn, GetWindowRgn, SetWindowRgn, HRGN,
+};
 use windows::Win32::UI::Shell::{IAppVisibility, APPBARDATA};
 use windows::Win32::{Foundation, UI::WindowsAndMessaging::*};
 use Foundation::HWND;
@@ -38,7 +41,10 @@ impl WantedHwnds {
             apps: false,
             applist: false,
         };
-        if settings.get_merge_tray() {
+        if settings.get_merge_tray()
+            || settings.get_merge_widgets()
+            || settings.get_enable_dynamic_borders()
+        {
             wanted_hwnds.tray = true;
             wanted_hwnds.rebar = true;
             wanted_hwnds.applist = true;
@@ -61,6 +67,8 @@ pub struct TaskbarData {
     apps depend on applist.
     */
     pub taskbar: Option<FormEntry>,
+
+    pub resolution: f64,
 
     pub tray: Option<FormEntry>,
     pub rebar: Option<FormEntry>,
@@ -92,6 +100,11 @@ impl FormEntry {
     }
 }
 
+unsafe fn get_dpi_from_hwnd(hwnd: &HWND) -> f64 {
+    let dpi = windows::Win32::UI::HiDpi::GetDpiForWindow(*hwnd);
+    dpi.into()
+}
+
 impl TaskbarData {
     pub fn new(wanted: &WantedHwnds) -> Self {
         let mut data = TaskbarData::default();
@@ -101,6 +114,8 @@ impl TaskbarData {
             if wanted.taskbar {
                 data.taskbar = FormEntry::new(HWND_TOP, "Shell_TrayWnd");
                 if let Some(taskbar) = &data.taskbar {
+                    data.resolution = get_dpi_from_hwnd(&taskbar.hwnd) / 96.00;
+
                     data.tray = None;
                     if wanted.tray {
                         data.tray = FormEntry::new(taskbar.hwnd, "TrayNotifyWnd");
@@ -147,6 +162,76 @@ unsafe fn string_to_pcstr(input: &str) -> windows::core::PCSTR {
 pub fn get_point_in_rect(rect: &RECT, point: &POINT) -> bool {
     /* safety: both have to be checked to be valid as its done in taskbar::is_hovering_on_tb */
     unsafe { windows::Win32::Graphics::Gdi::PtInRect(rect, *point).as_bool() }
+}
+
+#[derive(Default, Debug, Clone)]
+struct Region {
+    radius: i32,
+    top: i32,
+    left: i32,
+    width: i32,
+    height: i32,
+}
+
+impl Region {
+    fn new(radius: i32, top: i32, left: i32, width: i32, height: i32) -> Region {
+        Region {
+            radius,
+            top,
+            left,
+            width,
+            height,
+        }
+    }
+}
+
+pub fn create_rounded_region(settings: &TbSettings, tb_data: &TaskbarData) {
+    if let Some(taskbar_entry) = &tb_data.taskbar {
+        if let Some(tray_entry) = &tb_data.tray {
+            if let Some(applist_entry) = &tb_data.applist {
+                unsafe {
+                    let center_distance = taskbar_entry.rect.right - applist_entry.rect.right;
+                    let resolution = tb_data.resolution;
+
+                    let taskbar_dynamic_region = CreateRoundRectRgn(
+                        (center_distance as f64 * resolution) as i32 + settings.get_margin_left(),
+                        resolution as i32 + settings.get_margin_top(),
+                        ((applist_entry.rect.right as f64) * resolution) as i32
+                            - settings.get_margin_right(),
+                        ((taskbar_entry.rect.bottom as f64 - taskbar_entry.rect.top as f64)
+                            * resolution) as i32
+                            - settings.get_margin_bottom(),
+                        settings.get_rounded_corners_size(),
+                        settings.get_rounded_corners_size(),
+                    );
+
+                    if settings.get_dynamic_borders_show_tray() {
+                        let tray_region = CreateRoundRectRgn(
+                            (tray_entry.rect.left as f64 * resolution) as i32
+                                + settings.get_margin_left(),
+                            resolution as i32 + settings.get_margin_top(),
+                            ((tray_entry.rect.right as f64) * resolution) as i32
+                                - settings.get_margin_right(),
+                            ((taskbar_entry.rect.bottom as f64 - taskbar_entry.rect.top as f64)
+                                * resolution) as i32
+                                - settings.get_margin_bottom(),
+                            settings.get_rounded_corners_size(),
+                            settings.get_rounded_corners_size(),
+                        );
+                        CombineRgn(
+                            taskbar_dynamic_region,
+                            taskbar_dynamic_region,
+                            tray_region,
+                            windows::Win32::Graphics::Gdi::RGN_COMBINE_MODE(2),
+                        );
+                    }
+
+                    println!("calling setWindowRgn");
+                    SetWindowRgn(taskbar_entry.hwnd, taskbar_dynamic_region, true);
+                }
+            }
+        }
+    }
 }
 
 pub fn reset_taskbar(hwnd: &HWND, rect: &RECT) {

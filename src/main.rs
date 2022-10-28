@@ -34,8 +34,9 @@ fn start_hidden_tb() {
     println!("got handles, starting tb");
 
     //handles have to be updated on every loop if a merging option is enabled, to react to applist changes.
-    let update_handles_in_infrequent_routine =
-        !(settings.get_merge_tray() || settings.get_merge_widgets());
+    let update_handles_in_infrequent_routine = !(settings.get_merge_tray()
+        || settings.get_merge_widgets()
+        || settings.get_enable_dynamic_borders());
 
     loop {
         if signaling.get_exit_called() {
@@ -44,9 +45,12 @@ fn start_hidden_tb() {
 
         infrequent_counter %= settings.get_infrequent_count();
         if infrequent_counter == 0 {
-            if settings.get_autohide() {
+            if settings.get_autohide() || settings.get_enable_dynamic_borders() {
                 taskbar.check_and_set_taskbar_transparency_state();
                 windows_calls::check_and_update_workspace_region_for_autohide(&taskbar);
+                if settings.get_enable_dynamic_borders() {
+                    taskbar.call_dynamic_update();
+                }
             }
             if update_handles_in_infrequent_routine {
                 let new_handles = taskbar.fetch_new_handles();
