@@ -50,6 +50,24 @@ fn check_and_init_taskbar_state(settings: &TbSettings, taskbar: &mut Taskbar) ->
     return true;
 }
 
+#[inline(always)]
+fn init_tb_state_routine(
+    settings: &TbSettings,
+    taskbar: &mut Taskbar,
+    signaling: &signaling::Signaling
+) {
+    let mut infr_cnter = 0;
+    while !check_and_init_taskbar_state(&settings, taskbar) && !signaling.get_exit_called() {
+        infr_cnter += 1;
+        thread::sleep(time::Duration::from_millis(100));
+        if infr_cnter > 100 {
+            eprintln!("Could not initialize taskbar state, trying to refresh the handles");
+            infr_cnter = 0;
+            taskbar.refresh_handles();
+        }
+    }
+}
+
 fn start_hidden_tb() {
     let settings = TbSettings::new();
     let dur = time::Duration::from_millis(settings.get_sleep_time_in_ms());
@@ -71,11 +89,7 @@ fn start_hidden_tb() {
     }
 
     println!("got handles, initializing taskbar state");
-
-    while !check_and_init_taskbar_state(&settings, &mut taskbar) && !signaling.get_exit_called() {
-        thread::sleep(time::Duration::from_millis(100));
-    }
-
+    init_tb_state_routine(&settings, &mut taskbar, &signaling);
     println!("entering main loop");
 
     //handles have to be updated on every loop if a merging option is enabled, to react to applist changes.
