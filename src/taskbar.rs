@@ -93,10 +93,11 @@ impl Taskbar {
         false
     }
 
-    fn set_taskbar_alpha(&self, alpha: u8) {
+    fn set_taskbar_alpha(&self, alpha: u8) -> bool {
         if let Some(taskbar_entry) = &self.taskbar_data.taskbar {
-            windows_calls::set_window_alpha(&taskbar_entry.hwnd, alpha);
+            return windows_calls::set_window_alpha(&taskbar_entry.hwnd, alpha);
         }
+        return false;
     }
 
     pub fn check_and_set_taskbar_transparency_state(&self) {
@@ -107,32 +108,39 @@ impl Taskbar {
 
     pub fn hide_taskbar(&mut self) {
         let mut alpha: u8 = 255;
+        let mut changed = true;
         for step in 0..self.settings.get_animation_steps() {
             alpha = alpha.saturating_sub(self.step_value);
             if step == self.settings.get_animation_steps() - 1 {
                 alpha = 0;
             }
-            self.set_taskbar_alpha(alpha);
+            changed = changed && self.set_taskbar_alpha(alpha);
             std::thread::sleep(
                 std::time::Duration::from_millis(self.settings.get_animation_time_in_ms())
             );
         }
-        self.is_hidden = true;
+        if changed {
+            self.is_hidden = true;
+        }
     }
 
     pub fn show_taskbar(&mut self) {
         let mut alpha: u8 = 0;
+        let mut changed = true;
+
         for step in 0..self.settings.get_animation_steps() {
             alpha = alpha.saturating_add(self.step_value);
             if step == self.settings.get_animation_steps() - 1 {
                 alpha = 255;
             }
-            self.set_taskbar_alpha(alpha);
+            changed = changed && self.set_taskbar_alpha(alpha);
             std::thread::sleep(
                 std::time::Duration::from_millis(self.settings.get_animation_time_in_ms())
             );
         }
-        self.is_hidden = false;
+        if changed {
+            self.is_hidden = false;
+        }
     }
 
     fn merge_tray_with_applist(&mut self) {

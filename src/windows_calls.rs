@@ -324,7 +324,7 @@ pub fn check_and_set_transparency_style(hwnd: &HWND) {
     }
 }
 
-pub fn set_window_alpha(hwnd: &HWND, value: u8) {
+pub fn set_window_alpha(hwnd: &HWND, value: u8) -> bool {
     unsafe {
         if
             !windows::Win32::UI::WindowsAndMessaging
@@ -333,8 +333,10 @@ pub fn set_window_alpha(hwnd: &HWND, value: u8) {
         {
             /*todo: log error */
             eprintln!("could not change taskbar alpha");
+            return false;
         }
     }
+    return true;
 }
 
 pub fn set_handle_to_topmost(hwnd: &HWND) {
