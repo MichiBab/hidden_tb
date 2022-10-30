@@ -60,11 +60,11 @@ impl TbSettings {
             dynamic_borders_show_tray_if_disabled_on_hover: true,
             dynamic_borders_show_widgets: false,
             dynamic_borders_show_widgets_if_disabled_on_hover: false,
-            rounded_corners_size: 0,
-            margin_left: 0,
-            margin_right: 0,
-            margin_bottom: 0,
-            margin_top: 0,
+            rounded_corners_size: 4,
+            margin_left: 2,
+            margin_right: 2,
+            margin_bottom: 2,
+            margin_top: 2,
         }
     }
 
