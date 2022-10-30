@@ -137,7 +137,7 @@ impl Taskbar {
 
     fn merge_tray_with_applist(&mut self) {
         if let Some(tray_entry) = &self.taskbar_data.tray {
-            if let Some(apps_entry) = &self.taskbar_data.apps {
+            if let Some(apps_entry) = &self.taskbar_data.applist {
                 //Todo: maybe can call LockWindowUpdate so it doesnt update the window on pressing the up arrow button on the tray
                 windows_calls::move_window_on_tb(&tray_entry.hwnd, apps_entry.rect.right, 0);
             }

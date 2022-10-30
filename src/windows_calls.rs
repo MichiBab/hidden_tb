@@ -24,8 +24,8 @@ pub struct WantedHwnds {
     pub taskbar: bool,
     pub tray: bool,
     pub rebar: bool,
-    pub apps: bool,
     pub applist: bool,
+    pub apps: bool,
 }
 
 impl WantedHwnds {
@@ -36,8 +36,8 @@ impl WantedHwnds {
             taskbar: true,
             tray: false,
             rebar: false,
-            apps: false,
             applist: false,
+            apps: false,
         };
         if
             settings.get_merge_tray() ||
@@ -47,7 +47,8 @@ impl WantedHwnds {
             wanted_hwnds.tray = true;
             wanted_hwnds.rebar = true;
             wanted_hwnds.applist = true;
-            wanted_hwnds.apps = true;
+            //apps is currently not used, so we can keep it on false and not depend on it.
+            //wanted_hwnds.apps = true;
         }
         wanted_hwnds
     }
