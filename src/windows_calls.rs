@@ -205,9 +205,14 @@ pub fn create_rounded_region(
                                 Some(val) => {
                                     show_tray = val;
                                 }
-                                None => if let Some(cursor_pos) = get_cursor_pos() {
-                                    if get_point_in_rect(&tray_entry.rect, &cursor_pos) {
+                                None => {
+                                    let start_menu_open = get_start_menu_open();
+                                    if start_menu_open {
                                         show_tray = true;
+                                    } else if let Some(cursor_pos) = get_cursor_pos() {
+                                        if get_point_in_rect(&tray_entry.rect, &cursor_pos) {
+                                            show_tray = true;
+                                        }
                                     }
                                 }
                             }

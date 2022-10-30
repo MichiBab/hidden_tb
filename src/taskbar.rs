@@ -213,6 +213,8 @@ impl Taskbar {
     }
 
     pub fn handle_taskbar_state(&mut self) {
+        let start_menu_open = windows_calls::get_start_menu_open();
+
         /* for autohiding tray logic */
         if
             !self.settings.get_dynamic_borders_show_tray() &&
@@ -221,7 +223,10 @@ impl Taskbar {
         {
             if let Some(tray_entry) = &self.taskbar_data.tray {
                 if let Some(cursor_pos) = windows_calls::get_cursor_pos() {
-                    if windows_calls::get_point_in_rect(&tray_entry.rect, &cursor_pos) {
+                    if start_menu_open {
+                        self.tray_shown_currently = true;
+                        self.call_dynamic_update(Some(true), None);
+                    } else if windows_calls::get_point_in_rect(&tray_entry.rect, &cursor_pos) {
                         if !self.tray_shown_currently {
                             self.tray_shown_currently = true;
                             self.call_dynamic_update(Some(true), None);
@@ -240,7 +245,6 @@ impl Taskbar {
             return;
         }
 
-        let start_menu_open = windows_calls::get_start_menu_open();
         let is_hovering = self.is_hovering_on_tb();
 
         if start_menu_open || is_hovering {
