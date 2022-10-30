@@ -206,7 +206,8 @@ impl Taskbar {
         /* for autohiding tray logic */
         if
             !self.settings.get_dynamic_borders_show_tray() &&
-            self.settings.get_dynamic_borders_show_tray_if_disabled_on_hover()
+            self.settings.get_dynamic_borders_show_tray_if_disabled_on_hover() &&
+            self.settings.get_enable_dynamic_borders()
         {
             if let Some(tray_entry) = &self.taskbar_data.tray {
                 if let Some(cursor_pos) = windows_calls::get_cursor_pos() {

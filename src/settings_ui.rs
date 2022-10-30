@@ -21,7 +21,7 @@ pub fn open_ui() {
     let options = eframe::NativeOptions {
         icon_data: Some(load_icon("hidden_tb.ico")),
         transparent: true,
-        initial_window_size: Some(egui::vec2(500.0, 1000.0)),
+        initial_window_size: Some(egui::vec2(500.0, 800.0)),
         ..Default::default()
     };
     eframe::run_native(
@@ -183,7 +183,7 @@ impl eframe::App for MyApp {
             }
             let core_scroll_area = egui::ScrollArea
                 ::new([true, true])
-                .max_height(1000.0)
+                .max_height(800.0)
                 .id_source("options_scroll_area");
             core_scroll_area.show(ui, |ui| {
                 ui.vertical(|ui| {
