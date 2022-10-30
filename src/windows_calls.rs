@@ -298,7 +298,7 @@ fn compare_rect_to_workspace_region_for_autohide(current_rect: &RECT) -> bool {
     workarea_rect.bottom - workarea_rect.top == current_rect.bottom - 1 - current_rect.top
 }
 
-pub fn check_and_set_transparency_style(hwnd: &HWND) {
+pub fn check_and_set_transparency_style(hwnd: &HWND) -> bool {
     unsafe {
         /* as i32 */
         static __GWL_EXSTYLE: i32 = -20;
@@ -320,7 +320,9 @@ pub fn check_and_set_transparency_style(hwnd: &HWND) {
                 (WS_EX_LAYERED.0 as i32) | current_style | (WS_EX_TOOLWINDOW.0 as i32)
             );
             println!("setting taskbar to layered");
+            return false;
         }
+        return true;
     }
 }
 

@@ -16,9 +16,10 @@ impl Taskbar {
         let settings = TbSettings::new();
         let step_value = 255 / settings.get_animation_steps();
         let wanted_hwnds = WantedHwnds::new(&settings);
+        let tb_data = windows_calls::TaskbarData::new(&wanted_hwnds);
         Taskbar {
-            last_taskbar_data: windows_calls::TaskbarData::new(&wanted_hwnds),
-            taskbar_data: TaskbarData::default(),
+            last_taskbar_data: TaskbarData::default(),
+            taskbar_data: tb_data,
             settings,
             step_value,
             is_hidden: false,
@@ -100,10 +101,11 @@ impl Taskbar {
         return false;
     }
 
-    pub fn check_and_set_taskbar_transparency_state(&self) {
+    pub fn check_and_set_taskbar_transparency_state(&self) -> bool {
         if let Some(taskbar_entry) = &self.taskbar_data.taskbar {
-            windows_calls::check_and_set_transparency_style(&taskbar_entry.hwnd);
+            return windows_calls::check_and_set_transparency_style(&taskbar_entry.hwnd);
         }
+        return false;
     }
 
     pub fn hide_taskbar(&mut self) {

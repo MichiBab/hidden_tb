@@ -40,6 +40,16 @@ fn infrequent_routine(
     }
 }
 
+#[inline(always)]
+fn check_and_init_taskbar_state(settings: &TbSettings, taskbar: &mut Taskbar) -> bool {
+    if settings.get_autohide() || settings.get_enable_dynamic_borders() {
+        if !taskbar.check_and_set_taskbar_transparency_state() {
+            return false;
+        }
+    }
+    return true;
+}
+
 fn start_hidden_tb() {
     let settings = TbSettings::new();
     let dur = time::Duration::from_millis(settings.get_sleep_time_in_ms());
@@ -60,9 +70,13 @@ fn start_hidden_tb() {
         taskbar.refresh_handles();
     }
 
-    println!("got handles, starting tb");
+    println!("got handles, initializing taskbar state");
 
-    //Todo wait until transperancy is set, then wait until workspace region is set first to ensure that all works. Afterwards the infrequent routine will handle all.
+    while !check_and_init_taskbar_state(&settings, &mut taskbar) && !signaling.get_exit_called() {
+        thread::sleep(time::Duration::from_millis(100));
+    }
+
+    println!("entering main loop");
 
     //handles have to be updated on every loop if a merging option is enabled, to react to applist changes.
     let update_handles_in_infrequent_routine = !(
