@@ -299,7 +299,7 @@ impl eframe::App for MyApp {
                                             check_box_text
                                         );
                                         ui.add_space(SPACING);
-
+                                        /* //TODO enable if implemented 
                                         let check_box_text = self.formatted_string(
                                             "dynamic borders show widgets"
                                         );
@@ -317,7 +317,7 @@ impl eframe::App for MyApp {
                                             check_box_text
                                         );
                                         ui.add_space(SPACING);
-
+                                        */
                                         ui.label(
                                             self.formatted_string(
                                                 "Dynamic borders rounded corner size:"
@@ -412,9 +412,10 @@ impl eframe::App for MyApp {
                             let check_box_text = self.formatted_string("merge tray with applist");
                             ui.checkbox(&mut self.settings.merge_tray, check_box_text);
                             ui.add_space(SPACING);
+                            /* //TODO enable if implemented 
                             let check_box_text = self.formatted_string("merge widget with applist");
                             ui.checkbox(&mut self.settings.merge_widgets, check_box_text);
-                            ui.add_space(SPACING);
+                            ui.add_space(SPACING);*/
                         });
                     });
                     ui.separator();
