@@ -58,10 +58,11 @@ fn start_hidden_tb() {
         eprintln!("Waiting for handles...");
         thread::sleep(time::Duration::from_millis(100));
         taskbar.refresh_handles();
-        continue;
     }
 
     println!("got handles, starting tb");
+
+    //Todo wait until transperancy is set, then wait until workspace region is set first to ensure that all works. Afterwards the infrequent routine will handle all.
 
     //handles have to be updated on every loop if a merging option is enabled, to react to applist changes.
     let update_handles_in_infrequent_routine = !(

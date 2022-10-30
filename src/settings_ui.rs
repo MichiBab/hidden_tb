@@ -338,7 +338,7 @@ impl eframe::App for MyApp {
                                         );
                                         ui.add(
                                             egui::Slider
-                                                ::new(&mut self.settings.margin_top, 0..=20)
+                                                ::new(&mut self.settings.margin_top, -5..=20)
                                                 .step_by(1.0)
                                         );
                                         ui.add_space(SPACING);
@@ -348,7 +348,7 @@ impl eframe::App for MyApp {
                                         );
                                         ui.add(
                                             egui::Slider
-                                                ::new(&mut self.settings.margin_bottom, 0..=20)
+                                                ::new(&mut self.settings.margin_bottom, -5..=20)
                                                 .step_by(1.0)
                                         );
                                         ui.add_space(SPACING);
@@ -358,7 +358,7 @@ impl eframe::App for MyApp {
                                         );
                                         ui.add(
                                             egui::Slider
-                                                ::new(&mut self.settings.margin_left, 0..=20)
+                                                ::new(&mut self.settings.margin_left, -5..=20)
                                                 .step_by(1.0)
                                         );
                                         ui.add_space(SPACING);
@@ -368,7 +368,7 @@ impl eframe::App for MyApp {
                                         );
                                         ui.add(
                                             egui::Slider
-                                                ::new(&mut self.settings.margin_right, 0..=20)
+                                                ::new(&mut self.settings.margin_right, -5..=20)
                                                 .step_by(1.0)
                                         );
                                     }
