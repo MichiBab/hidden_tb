@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::{ Deserialize, Serialize };
 use std::error::Error;
 use std::fs::File;
 use std::path::PathBuf;
@@ -21,6 +21,7 @@ pub struct TbSettings {
     dynamic_borders_show_tray: bool,
     dynamic_borders_show_tray_if_disabled_on_hover: bool,
     dynamic_borders_show_widgets: bool,
+    dynamic_borders_show_widgets_if_disabled_on_hover: bool,
     rounded_corners_size: i32,
     margin_left: i32,
     margin_right: i32,
@@ -58,12 +59,25 @@ impl TbSettings {
             dynamic_borders_show_tray: true,
             dynamic_borders_show_tray_if_disabled_on_hover: true,
             dynamic_borders_show_widgets: false,
+            dynamic_borders_show_widgets_if_disabled_on_hover: false,
             rounded_corners_size: 0,
             margin_left: 0,
             margin_right: 0,
             margin_bottom: 0,
             margin_top: 0,
         }
+    }
+
+    pub fn get_dynamic_borders_show_widgets_if_disabled_on_hover(&self) -> bool {
+        self.dynamic_borders_show_widgets_if_disabled_on_hover
+    }
+
+    pub fn set_dynamic_borders_show_widgets_if_disabled_on_hover(&mut self, value: bool) {
+        if self.dynamic_borders_show_widgets_if_disabled_on_hover == value {
+            return;
+        }
+        self.dynamic_borders_show_widgets_if_disabled_on_hover = value;
+        self.try_save();
     }
 
     pub fn get_dynamic_borders_show_tray_if_disabled_on_hover(&self) -> bool {
@@ -289,9 +303,11 @@ impl TbSettings {
     fn try_load() -> Option<TbSettings> {
         if TbSettings::check_if_file_exists() {
             match Self::load() {
-                Ok(val) => return Some(val),
+                Ok(val) => {
+                    return Some(val);
+                }
                 Err(_) => Self::delete_file(),
-            };
+            }
         }
         None
     }

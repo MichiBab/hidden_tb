@@ -1,5 +1,5 @@
-use crate::tb_settings::{self, TbSettings};
-use crate::windows_calls::{self, TaskbarData, WantedHwnds, _ALWAYS_ON_TOP};
+use crate::tb_settings::{ self, TbSettings };
+use crate::windows_calls::{ self, TaskbarData, WantedHwnds, _ALWAYS_ON_TOP };
 /*  */
 #[derive(Default, Debug)]
 pub struct Taskbar {
@@ -81,9 +81,10 @@ impl Taskbar {
                 let mut hidden_rect = taskbar_entry.rect.clone();
                 hidden_rect.bottom += self.settings.get_tb_rect_bottom_offset();
                 if self.settings.get_autohide() && self.is_hidden {
-                    hidden_rect.top = hidden_rect.bottom
-                        - self.settings.get_tb_rect_detection_size_in_pixel()
-                        - self.settings.get_tb_rect_bottom_offset();
+                    hidden_rect.top =
+                        hidden_rect.bottom -
+                        self.settings.get_tb_rect_detection_size_in_pixel() -
+                        self.settings.get_tb_rect_bottom_offset();
                     return windows_calls::get_point_in_rect(&hidden_rect, &cursor_pos);
                 }
                 return windows_calls::get_point_in_rect(&hidden_rect, &cursor_pos);
@@ -112,9 +113,9 @@ impl Taskbar {
                 alpha = 0;
             }
             self.set_taskbar_alpha(alpha);
-            std::thread::sleep(std::time::Duration::from_millis(
-                self.settings.get_animation_time_in_ms(),
-            ));
+            std::thread::sleep(
+                std::time::Duration::from_millis(self.settings.get_animation_time_in_ms())
+            );
         }
         self.is_hidden = true;
     }
@@ -127,9 +128,9 @@ impl Taskbar {
                 alpha = 255;
             }
             self.set_taskbar_alpha(alpha);
-            std::thread::sleep(std::time::Duration::from_millis(
-                self.settings.get_animation_time_in_ms(),
-            ));
+            std::thread::sleep(
+                std::time::Duration::from_millis(self.settings.get_animation_time_in_ms())
+            );
         }
         self.is_hidden = false;
     }
@@ -170,11 +171,23 @@ impl Taskbar {
         if nothing_changed {
             return;
         }
-        self.call_dynamic_update();
+        self.call_dynamic_update(None, None);
     }
 
-    pub fn call_dynamic_update(&mut self) {
-        windows_calls::create_rounded_region(&self.settings, &self.taskbar_data);
+    /*
+    hovering over tray and hovering over widgets will be calculated in the windows calls create_rounded_region function if None is passed.
+    If Some is passed, the value will be used. */
+    pub fn call_dynamic_update(
+        &mut self,
+        hovering_over_tray: Option<bool>,
+        hovering_over_widgets: Option<bool>
+    ) {
+        windows_calls::create_rounded_region(
+            &self.settings,
+            &self.taskbar_data,
+            hovering_over_tray,
+            hovering_over_widgets
+        );
     }
 
     pub fn on_new_handles(&mut self) {
@@ -190,31 +203,30 @@ impl Taskbar {
     }
 
     pub fn handle_taskbar_state(&mut self) {
-        if !self.settings.get_autohide() {
-            return;
-        }
-
         /* for autohiding tray logic */
-        if !self.settings.get_dynamic_borders_show_tray()
-            && self
-                .settings
-                .get_dynamic_borders_show_tray_if_disabled_on_hover()
+        if
+            !self.settings.get_dynamic_borders_show_tray() &&
+            self.settings.get_dynamic_borders_show_tray_if_disabled_on_hover()
         {
             if let Some(tray_entry) = &self.taskbar_data.tray {
                 if let Some(cursor_pos) = windows_calls::get_cursor_pos() {
                     if windows_calls::get_point_in_rect(&tray_entry.rect, &cursor_pos) {
                         if !self.tray_shown_currently {
                             self.tray_shown_currently = true;
-                            self.call_dynamic_update();
+                            self.call_dynamic_update(Some(true), None);
                         }
                     } else {
                         if self.tray_shown_currently {
                             self.tray_shown_currently = false;
-                            self.call_dynamic_update();
+                            self.call_dynamic_update(Some(false), None);
                         }
                     }
                 }
             }
+        }
+
+        if !self.settings.get_autohide() {
+            return;
         }
 
         let start_menu_open = windows_calls::get_start_menu_open();
