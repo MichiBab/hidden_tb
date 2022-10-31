@@ -402,7 +402,7 @@ impl eframe::App for MyApp {
                             );
                             ui.add(
                                 egui::Slider
-                                    ::new(&mut self.settings.infrequent_count, 0..=360)
+                                    ::new(&mut self.settings.infrequent_count, 1..=360)
                                     .step_by(1.0)
                             );
 
