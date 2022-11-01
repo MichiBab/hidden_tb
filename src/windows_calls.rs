@@ -409,6 +409,7 @@ unsafe fn call_and_check_set_window_region(
     rect: &RECT,
     call_options: &[SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS]
 ) -> bool {
+    let mut resetted = false;
     for call_option in call_options {
         let mut mut_rect = rect.clone();
         if
@@ -423,11 +424,11 @@ unsafe fn call_and_check_set_window_region(
         {
             if get_rect_of_work_area() == mut_rect {
                 println!("changed workspace correctly");
-                return true;
+                resetted = true;
             }
         }
     }
-    false
+    resetted
 }
 
 fn reset_window_region(rect: &RECT) {
