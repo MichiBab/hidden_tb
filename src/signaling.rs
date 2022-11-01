@@ -1,7 +1,4 @@
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc,
-};
+use std::sync::{ atomic::{ AtomicBool, Ordering }, Arc };
 
 use once_cell::sync::OnceCell;
 
@@ -9,18 +6,9 @@ use once_cell::sync::OnceCell;
 pub struct Signaling {
     exit_called: AtomicBool,
     settings_called: AtomicBool,
-    reset_called: AtomicBool,
 }
 
 impl Signaling {
-    pub fn set_reset_called(&self, val: bool) {
-        self.reset_called.store(val, Ordering::SeqCst);
-    }
-
-    pub fn get_reset_called(&self) -> bool {
-        self.reset_called.load(Ordering::SeqCst)
-    }
-
     pub fn set_exit_called(&self, val: bool) {
         self.exit_called.store(val, Ordering::SeqCst);
     }

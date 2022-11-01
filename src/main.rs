@@ -128,16 +128,5 @@ fn start_hidden_tb() {
 
 fn main() {
     windows_calls::initialize_windows_calls();
-
-    loop {
-        start_hidden_tb();
-        //check if settings were called with reset
-        if !signaling::get_signaling_struct().get_reset_called() {
-            return;
-        } else {
-            signaling::get_signaling_struct().set_reset_called(false);
-            signaling::get_signaling_struct().set_exit_called(false);
-            signaling::get_signaling_struct().set_settings_called(false);
-        }
-    }
+    start_hidden_tb();
 }
