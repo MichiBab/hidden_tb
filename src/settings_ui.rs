@@ -429,6 +429,7 @@ impl eframe::App for MyApp {
                         self.info_string = self.formatted_small_string("Settings saved.");
                     }
 
+                    /*
                     if
                         ui
                             .button(
@@ -441,7 +442,7 @@ impl eframe::App for MyApp {
                             "Settings applied. Close this window to restart the taskbar."
                         );
                         signaling::get_signaling_struct().set_reset_called(true);
-                    }
+                    } */
 
                     ui.label(self.info_string.clone());
                     ui.separator();
