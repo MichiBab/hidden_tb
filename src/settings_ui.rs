@@ -426,7 +426,9 @@ impl eframe::App for MyApp {
 
                     if ui.button(self.formatted_string("Save Settings")).clicked() {
                         self.call_settings_update();
-                        self.info_string = self.formatted_small_string("Settings saved.");
+                        self.info_string = self.formatted_small_string(
+                            "Settings saved. Close the gui and start hidden_tb.exe again with the applied changes."
+                        );
                     }
 
                     /*
