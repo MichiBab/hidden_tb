@@ -1,12 +1,14 @@
-use crate::tb_settings::{self, TbSettings};
-use crate::windows_calls::{self, TaskbarData, WantedHwnds, _ALWAYS_ON_TOP};
+use crate::tb_settings::{ self, TbSettings };
+use crate::windows_calls::{ self, TaskbarData, WantedHwnds, _ALWAYS_ON_TOP };
 /*  */
 #[derive(Default, Debug)]
 pub struct Taskbar {
     settings: tb_settings::TbSettings,
     taskbar_data: windows_calls::TaskbarData,
+    last_taskbar_data: windows_calls::TaskbarData,
     is_hidden: bool,
     step_value: u8,
+    tray_shown_currently: bool,
 }
 
 impl Taskbar {
@@ -14,24 +16,32 @@ impl Taskbar {
         let settings = TbSettings::new();
         let step_value = 255 / settings.get_animation_steps();
         let wanted_hwnds = WantedHwnds::new(&settings);
+        let tb_data = windows_calls::TaskbarData::new(&wanted_hwnds);
         Taskbar {
-            taskbar_data: windows_calls::TaskbarData::new(&wanted_hwnds),
+            last_taskbar_data: TaskbarData::default(),
+            taskbar_data: tb_data,
             settings,
             step_value,
             is_hidden: false,
+            tray_shown_currently: false,
         }
     }
 
     pub fn refresh_handles(&mut self) {
-        self.taskbar_data = windows_calls::TaskbarData::new(&WantedHwnds::new(&self.settings));
+        let taskbar_data = windows_calls::TaskbarData::new(&WantedHwnds::new(&self.settings));
+        self.taskbar_data = taskbar_data.clone();
+        self.last_taskbar_data = taskbar_data;
     }
 
     pub fn fetch_new_handles(&self) -> TaskbarData {
         windows_calls::TaskbarData::new(&WantedHwnds::new(&self.settings))
     }
 
+    /* calls on_new_handles to update all routines that have to react on new handles. */
     pub fn insert_handles(&mut self, new_tb_data: TaskbarData) {
+        self.last_taskbar_data = self.taskbar_data.clone();
         self.taskbar_data = new_tb_data;
+        self.on_new_handles();
     }
 
     pub fn refresh_area_and_set_on_top(&self) {
@@ -72,9 +82,10 @@ impl Taskbar {
                 let mut hidden_rect = taskbar_entry.rect.clone();
                 hidden_rect.bottom += self.settings.get_tb_rect_bottom_offset();
                 if self.settings.get_autohide() && self.is_hidden {
-                    hidden_rect.top = hidden_rect.bottom
-                        - self.settings.get_tb_rect_detection_size_in_pixel()
-                        - self.settings.get_tb_rect_bottom_offset();
+                    hidden_rect.top =
+                        hidden_rect.bottom -
+                        self.settings.get_tb_rect_detection_size_in_pixel() -
+                        self.settings.get_tb_rect_bottom_offset();
                     return windows_calls::get_point_in_rect(&hidden_rect, &cursor_pos);
                 }
                 return windows_calls::get_point_in_rect(&hidden_rect, &cursor_pos);
@@ -83,54 +94,157 @@ impl Taskbar {
         false
     }
 
-    fn set_taskbar_alpha(&self, alpha: u8) {
+    fn set_taskbar_alpha(&self, alpha: u8) -> bool {
         if let Some(taskbar_entry) = &self.taskbar_data.taskbar {
-            windows_calls::set_window_alpha(&taskbar_entry.hwnd, alpha);
+            return windows_calls::set_window_alpha(&taskbar_entry.hwnd, alpha);
         }
+        return false;
     }
 
-    pub fn check_and_set_taskbar_transparency_state(&self) {
+    pub fn check_and_set_taskbar_transparency_state(&self) -> bool {
         if let Some(taskbar_entry) = &self.taskbar_data.taskbar {
-            windows_calls::check_and_set_transparency_style(&taskbar_entry.hwnd);
+            return windows_calls::check_and_set_transparency_style(&taskbar_entry.hwnd);
         }
+        return false;
     }
 
     pub fn hide_taskbar(&mut self) {
         let mut alpha: u8 = 255;
+        let mut changed = true;
         for step in 0..self.settings.get_animation_steps() {
             alpha = alpha.saturating_sub(self.step_value);
             if step == self.settings.get_animation_steps() - 1 {
                 alpha = 0;
             }
-            self.set_taskbar_alpha(alpha);
-            std::thread::sleep(std::time::Duration::from_millis(
-                self.settings.get_animation_time_in_ms(),
-            ));
+            changed = changed && self.set_taskbar_alpha(alpha);
+            std::thread::sleep(
+                std::time::Duration::from_millis(self.settings.get_animation_time_in_ms())
+            );
         }
-        self.is_hidden = true;
+        if changed {
+            self.is_hidden = true;
+        }
     }
 
     pub fn show_taskbar(&mut self) {
         let mut alpha: u8 = 0;
+        let mut changed = true;
+
         for step in 0..self.settings.get_animation_steps() {
             alpha = alpha.saturating_add(self.step_value);
             if step == self.settings.get_animation_steps() - 1 {
                 alpha = 255;
             }
-            self.set_taskbar_alpha(alpha);
-            std::thread::sleep(std::time::Duration::from_millis(
-                self.settings.get_animation_time_in_ms(),
-            ));
+            changed = changed && self.set_taskbar_alpha(alpha);
+            std::thread::sleep(
+                std::time::Duration::from_millis(self.settings.get_animation_time_in_ms())
+            );
         }
-        self.is_hidden = false;
+        if changed {
+            self.is_hidden = false;
+        }
+    }
+
+    fn merge_tray_with_applist(&mut self) {
+        if let Some(tray_entry) = &self.taskbar_data.tray {
+            if let Some(apps_entry) = &self.taskbar_data.applist {
+                //Todo: maybe can call LockWindowUpdate so it doesnt update the window on pressing the up arrow button on the tray
+                windows_calls::move_window_on_tb(&tray_entry.hwnd, apps_entry.rect.right, 0);
+            }
+        }
+    }
+
+    fn merge_widgets_with_applist(&mut self) {
+        //TODO
+    }
+
+    fn update_dynamic_borders(&mut self) {
+        //create region
+        let mut nothing_changed = true;
+        if let Some(last_applist) = &self.last_taskbar_data.applist {
+            if let Some(current_applist) = &self.taskbar_data.applist {
+                if last_applist.rect != current_applist.rect {
+                    nothing_changed = false;
+                }
+            }
+        }
+        if self.settings.get_dynamic_borders_show_tray() {
+            if let Some(last_tray) = &self.last_taskbar_data.tray {
+                if let Some(current_tray) = &self.taskbar_data.tray {
+                    if last_tray.rect != current_tray.rect {
+                        nothing_changed = false;
+                    }
+                }
+            }
+        }
+
+        if nothing_changed {
+            return;
+        }
+        self.call_dynamic_update(None, None);
+    }
+
+    /*
+    hovering over tray and hovering over widgets will be calculated in the windows calls create_rounded_region function if None is passed.
+    If Some is passed, the value will be used. */
+    pub fn call_dynamic_update(
+        &mut self,
+        hovering_over_tray: Option<bool>,
+        hovering_over_widgets: Option<bool>
+    ) {
+        windows_calls::create_rounded_region(
+            &self.settings,
+            &self.taskbar_data,
+            hovering_over_tray,
+            hovering_over_widgets
+        );
+    }
+
+    pub fn on_new_handles(&mut self) {
+        if self.settings.get_merge_tray() {
+            self.merge_tray_with_applist();
+        }
+        if self.settings.get_merge_widgets() {
+            self.merge_widgets_with_applist();
+        }
+        if self.settings.get_enable_dynamic_borders() {
+            self.update_dynamic_borders();
+        }
     }
 
     pub fn handle_taskbar_state(&mut self) {
+        let start_menu_open = windows_calls::get_start_menu_open();
+
+        /* for autohiding tray logic */
+        if
+            !self.settings.get_dynamic_borders_show_tray() &&
+            self.settings.get_dynamic_borders_show_tray_if_disabled_on_hover() &&
+            self.settings.get_enable_dynamic_borders()
+        {
+            if let Some(tray_entry) = &self.taskbar_data.tray {
+                if let Some(cursor_pos) = windows_calls::get_cursor_pos() {
+                    if start_menu_open {
+                        self.tray_shown_currently = true;
+                        self.call_dynamic_update(Some(true), None);
+                    } else if windows_calls::get_point_in_rect(&tray_entry.rect, &cursor_pos) {
+                        if !self.tray_shown_currently {
+                            self.tray_shown_currently = true;
+                            self.call_dynamic_update(Some(true), None);
+                        }
+                    } else {
+                        if self.tray_shown_currently {
+                            self.tray_shown_currently = false;
+                            self.call_dynamic_update(Some(false), None);
+                        }
+                    }
+                }
+            }
+        }
+
         if !self.settings.get_autohide() {
             return;
         }
 
-        let start_menu_open = windows_calls::get_start_menu_open();
         let is_hovering = self.is_hovering_on_tb();
 
         if start_menu_open || is_hovering {
