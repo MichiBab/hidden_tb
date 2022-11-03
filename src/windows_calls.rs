@@ -298,9 +298,10 @@ fn get_rect_of_work_area() -> RECT {
     workarea_rect
 }
 
-fn compare_rect_to_workspace_region_for_autohide(current_rect: &RECT) -> bool {
+fn compare_rect_to_workspace_region_for_autohide(current_rect: &RECT, top_offset: u32) -> bool {
     let workarea_rect = get_rect_of_work_area();
-    workarea_rect.bottom - workarea_rect.top == current_rect.bottom - 1 - current_rect.top
+    workarea_rect.bottom - workarea_rect.top ==
+        current_rect.bottom - 1 - current_rect.top - (top_offset as i32)
 }
 
 pub fn check_and_set_transparency_style(hwnd: &HWND) -> bool {
@@ -366,15 +367,15 @@ pub fn set_app_bar_state(hwnd: &HWND, option: isize) {
 }
 
 /* this function checks if each monitor is configured correctly for the autohide feature. */
-pub fn check_and_update_workspace_region_for_autohide(taskbar: &Taskbar) {
+pub fn check_and_update_workspace_region_for_autohide(taskbar: &Taskbar, top_offset: u32) {
     let mut change_in_workspace = false;
     let monitors = monitors::get_monitors();
     for primary_monitor in monitors.iter().filter(|m| m.is_primary()) {
         let display_area = primary_monitor.get_display();
-        if !compare_rect_to_workspace_region_for_autohide(&display_area) {
+        if !compare_rect_to_workspace_region_for_autohide(&display_area, top_offset) {
             /* work area is not configured correctly. Setting to autohide. */
             println!("calling set window region");
-            set_window_region_for_autohide(&display_area);
+            set_window_region_for_autohide(&display_area, top_offset);
             change_in_workspace = true;
         }
     }
@@ -383,9 +384,10 @@ pub fn check_and_update_workspace_region_for_autohide(taskbar: &Taskbar) {
     }
 }
 
-fn set_window_region_for_autohide(rect: &RECT) {
+fn set_window_region_for_autohide(rect: &RECT, top_offset: u32) {
     let mut mut_rect = rect.clone();
     mut_rect.bottom -= 1;
+    mut_rect.top += top_offset as i32;
     unsafe {
         if
             call_and_check_set_window_region(

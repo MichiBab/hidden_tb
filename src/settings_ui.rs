@@ -40,6 +40,7 @@ pub fn open_ui() {
 
 pub struct TbAccessibleSettings {
     autohide: bool,
+    workspace_offset_top: u32,
     merge_tray: bool,
     merge_widgets: bool,
     sleep_time_in_ms: u64,
@@ -64,6 +65,7 @@ impl TbAccessibleSettings {
     fn from(settings: &TbSettings) -> Self {
         Self {
             autohide: settings.get_autohide(),
+            workspace_offset_top: settings.get_workspace_offset_top(),
             sleep_time_in_ms: settings.get_sleep_time_in_ms(),
             merge_tray: settings.get_merge_tray(),
             merge_widgets: settings.get_merge_widgets(),
@@ -136,6 +138,7 @@ impl Default for MyApp {
 impl MyApp {
     fn call_settings_update(&mut self) {
         self.global_settings.set_merge_tray(self.settings.merge_tray);
+        self.global_settings.set_workspace_offset_top(self.settings.workspace_offset_top);
         self.global_settings.set_merge_widgets(self.settings.merge_widgets);
         self.global_settings.set_autohide(self.settings.autohide);
         self.global_settings.set_animation_steps(self.settings.animation_steps);
@@ -262,6 +265,20 @@ impl eframe::App for MyApp {
                                                 ::new(
                                                     &mut self.settings.tb_rect_bottom_offset,
                                                     0..=5
+                                                )
+                                                .step_by(1.0)
+                                        );
+                                        ui.label(
+                                            self.formatted_small_string(
+                                                "Offset to change the maximize window behavior. Leave it on 0 to fill the screen on maximizing a window, 
+                                                and bigger then 0 to use a top bar like rainmeter, so it will always show even when maximizing a window.."
+                                            )
+                                        );
+                                        ui.add(
+                                            egui::Slider
+                                                ::new(
+                                                    &mut self.settings.workspace_offset_top,
+                                                    0..=200
                                                 )
                                                 .step_by(1.0)
                                         );

@@ -9,6 +9,7 @@ const FILE_NAME: &str = "settings.json";
 #[derive(Serialize, Deserialize, Default, Debug, Clone)]
 pub struct TbSettings {
     autohide: bool,
+    workspace_offset_top: u32,
     merge_tray: bool,
     merge_widgets: bool,
     sleep_time_in_ms: u64,
@@ -47,6 +48,7 @@ impl TbSettings {
     fn load_defaults() -> TbSettings {
         TbSettings {
             autohide: true,
+            workspace_offset_top: 0,
             merge_tray: false,
             merge_widgets: false,
             sleep_time_in_ms: 10,
@@ -66,6 +68,18 @@ impl TbSettings {
             margin_bottom: 2,
             margin_top: 2,
         }
+    }
+
+    pub fn get_workspace_offset_top(&self) -> u32 {
+        self.workspace_offset_top
+    }
+
+    pub fn set_workspace_offset_top(&mut self, value: u32) {
+        if self.workspace_offset_top == value {
+            return;
+        }
+        self.workspace_offset_top = value;
+        self.try_save();
     }
 
     pub fn get_dynamic_borders_show_widgets_if_disabled_on_hover(&self) -> bool {

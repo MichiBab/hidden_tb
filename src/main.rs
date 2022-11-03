@@ -1,4 +1,4 @@
-#![windows_subsystem = "windows"]
+//#![windows_subsystem = "windows"]
 
 use std::{ thread, time };
 use taskbar::Taskbar;
@@ -29,7 +29,10 @@ fn infrequent_routine(
     if settings.get_autohide() || settings.get_enable_dynamic_borders() {
         taskbar.check_and_set_taskbar_transparency_state();
         if settings.get_autohide() {
-            windows_calls::check_and_update_workspace_region_for_autohide(&taskbar);
+            windows_calls::check_and_update_workspace_region_for_autohide(
+                &taskbar,
+                settings.get_workspace_offset_top()
+            );
         }
         if settings.get_enable_dynamic_borders() {
             taskbar.call_dynamic_update(None, None);
