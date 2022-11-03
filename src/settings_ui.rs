@@ -268,10 +268,13 @@ impl eframe::App for MyApp {
                                                 )
                                                 .step_by(1.0)
                                         );
+                                        ui.add_space(SPACING);
+                                        ui.label(
+                                            self.formatted_string("Window maximizing Offset Top:")
+                                        );
                                         ui.label(
                                             self.formatted_small_string(
-                                                "Offset to change the maximize window behavior. Leave it on 0 to fill the screen on maximizing a window, 
-                                                and bigger then 0 to use a top bar like rainmeter, so it will always show even when maximizing a window.."
+                                                "Offset to change the maximize window behavior. Leave it on 0 to fill the screen on maximizing a window, and bigger then 0 to use a top bar like rainmeter, so it will always show even when maximizing a window."
                                             )
                                         );
                                         ui.add(
