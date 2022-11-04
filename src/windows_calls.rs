@@ -380,7 +380,15 @@ pub fn check_and_update_workspace_region_for_autohide(taskbar: &Taskbar, top_off
         }
     }
     if change_in_workspace {
+        send_workspace_and_display_change_msg();
         taskbar.refresh_area_and_set_on_top();
+    }
+}
+
+fn send_workspace_and_display_change_msg() {
+    unsafe {
+        PostMessageW(HWND(0xffff), WM_DISPLAYCHANGE, Foundation::WPARAM(0), Foundation::LPARAM(0));
+        PostMessageW(HWND(0xffff), WM_SETTINGCHANGE, Foundation::WPARAM(0), Foundation::LPARAM(0));
     }
 }
 
@@ -393,9 +401,10 @@ fn set_window_region_for_autohide(rect: &RECT, top_offset: u32) {
             call_and_check_set_window_region(
                 &mut_rect,
                 &[
-                    SPIF_SENDCHANGE | SPIF_UPDATEINIFILE,
-                    SPIF_UPDATEINIFILE,
                     SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0),
+                    SPIF_SENDWININICHANGE | SPIF_UPDATEINIFILE | SPIF_SENDCHANGE,
+                    SPIF_SENDCHANGE,
+                    SPIF_UPDATEINIFILE,
                 ]
             )
         {
@@ -454,12 +463,14 @@ fn reset_window_region(rect: &RECT) {
             call_and_check_set_window_region(
                 &mut_rect,
                 &[
-                    SPIF_SENDCHANGE | SPIF_UPDATEINIFILE,
-                    SPIF_UPDATEINIFILE,
                     SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0),
+                    SPIF_SENDWININICHANGE | SPIF_UPDATEINIFILE | SPIF_SENDCHANGE,
+                    SPIF_SENDCHANGE,
+                    SPIF_UPDATEINIFILE,
                 ]
             )
         {
+            send_workspace_and_display_change_msg();
             return;
         }
         /* no call worked, todo: log error */
