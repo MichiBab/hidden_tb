@@ -1,8 +1,8 @@
 use std::ffi::c_void;
 use windows::Win32::Foundation::POINT;
-use windows::Win32::Graphics::Gdi::{ CombineRgn, CreateRoundRectRgn, SetWindowRgn };
-use windows::Win32::UI::Shell::{ IAppVisibility, APPBARDATA };
-use windows::Win32::{ Foundation, UI::WindowsAndMessaging::* };
+use windows::Win32::Graphics::Gdi::{CombineRgn, CreateRoundRectRgn, SetWindowRgn};
+use windows::Win32::UI::Shell::{IAppVisibility, APPBARDATA};
+use windows::Win32::{Foundation, UI::WindowsAndMessaging::*};
 use Foundation::HWND;
 use Foundation::RECT;
 
@@ -39,10 +39,9 @@ impl WantedHwnds {
             applist: false,
             apps: false,
         };
-        if
-            settings.get_merge_tray() ||
-            settings.get_merge_widgets() ||
-            settings.get_enable_dynamic_borders()
+        if settings.get_merge_tray()
+            || settings.get_merge_widgets()
+            || settings.get_enable_dynamic_borders()
         {
             wanted_hwnds.tray = true;
             wanted_hwnds.rebar = true;
@@ -87,7 +86,7 @@ impl FormEntry {
             dependent_hwnd,
             HWND_TOP,
             string_to_pcstr(name),
-            windows::core::PCSTR::null()
+            windows::core::PCSTR::null(),
         );
         let mut rect = windows::Win32::Foundation::RECT::default();
         let erg = windows::Win32::UI::WindowsAndMessaging::GetWindowRect(hwnd, &mut rect);
@@ -130,10 +129,8 @@ impl TaskbarData {
                                 if let Some(applist) = &data.applist {
                                     data.apps = None;
                                     if wanted.apps {
-                                        data.apps = FormEntry::new(
-                                            applist.hwnd,
-                                            "MSTaskListWClass"
-                                        );
+                                        data.apps =
+                                            FormEntry::new(applist.hwnd, "MSTaskListWClass");
                                     }
                                 }
                             }
@@ -147,11 +144,11 @@ impl TaskbarData {
     }
 
     pub fn contains_none(&self) -> bool {
-        (self.applist.is_none() && self.wanted_hwnds.applist) ||
-            (self.apps.is_none() && self.wanted_hwnds.apps) ||
-            (self.rebar.is_none() && self.wanted_hwnds.rebar) ||
-            (self.tray.is_none() && self.wanted_hwnds.tray) ||
-            (self.taskbar.is_none() && self.wanted_hwnds.taskbar)
+        (self.applist.is_none() && self.wanted_hwnds.applist)
+            || (self.apps.is_none() && self.wanted_hwnds.apps)
+            || (self.rebar.is_none() && self.wanted_hwnds.rebar)
+            || (self.tray.is_none() && self.wanted_hwnds.tray)
+            || (self.taskbar.is_none() && self.wanted_hwnds.taskbar)
     }
 }
 
@@ -163,16 +160,14 @@ unsafe fn string_to_pcstr(input: &str) -> windows::core::PCSTR {
 
 pub fn get_point_in_rect(rect: &RECT, point: &POINT) -> bool {
     /* safety: both have to be checked to be valid as its done in taskbar::is_hovering_on_tb */
-    unsafe {
-        windows::Win32::Graphics::Gdi::PtInRect(rect, *point).as_bool()
-    }
+    unsafe { windows::Win32::Graphics::Gdi::PtInRect(rect, *point).as_bool() }
 }
 
 pub fn create_rounded_region(
     settings: &TbSettings,
     tb_data: &TaskbarData,
-    hovering_over_tray: Option<bool>,
-    _hovering_over_widgets: Option<bool>
+    hovering_over_tray: bool,
+    _hovering_over_widgets: bool,
 ) {
     if let Some(taskbar_entry) = &tb_data.taskbar {
         if let Some(tray_entry) = &tb_data.tray {
@@ -182,62 +177,43 @@ pub fn create_rounded_region(
                     let resolution = tb_data.resolution;
 
                     let taskbar_dynamic_region = CreateRoundRectRgn(
-                        (((center_distance as f64) * resolution) as i32) +
-                            settings.get_margin_left(),
+                        (((center_distance as f64) * resolution) as i32)
+                            + settings.get_margin_left(),
                         (resolution as i32) + settings.get_margin_top(),
-                        (((applist_entry.rect.right as f64) * resolution) as i32) -
-                            settings.get_margin_right(),
-                        (
-                            (((taskbar_entry.rect.bottom as f64) -
-                                (taskbar_entry.rect.top as f64)) *
-                                resolution) as i32
-                        ) - settings.get_margin_bottom(),
+                        (((applist_entry.rect.right as f64) * resolution) as i32)
+                            - settings.get_margin_right(),
+                        ((((taskbar_entry.rect.bottom as f64) - (taskbar_entry.rect.top as f64))
+                            * resolution) as i32)
+                            - settings.get_margin_bottom(),
                         settings.get_rounded_corners_size(),
-                        settings.get_rounded_corners_size()
+                        settings.get_rounded_corners_size(),
                     );
 
                     let mut show_tray = false;
                     if settings.get_dynamic_borders_show_tray() {
                         show_tray = true;
-                    } else {
-                        if settings.get_dynamic_borders_show_tray_if_disabled_on_hover() {
-                            match hovering_over_tray {
-                                Some(val) => {
-                                    show_tray = val;
-                                }
-                                None => {
-                                    let start_menu_open = get_start_menu_open();
-                                    if start_menu_open {
-                                        show_tray = true;
-                                    } else if let Some(cursor_pos) = get_cursor_pos() {
-                                        if get_point_in_rect(&tray_entry.rect, &cursor_pos) {
-                                            show_tray = true;
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                    } else if settings.get_dynamic_borders_show_tray_if_disabled_on_hover() {
+                        show_tray = hovering_over_tray;
                     }
                     if show_tray {
                         let tray_region = CreateRoundRectRgn(
-                            (((tray_entry.rect.left as f64) * resolution) as i32) +
-                                settings.get_margin_left(),
+                            (((tray_entry.rect.left as f64) * resolution) as i32)
+                                + settings.get_margin_left(),
                             (resolution as i32) + settings.get_margin_top(),
-                            (((tray_entry.rect.right as f64) * resolution) as i32) -
-                                settings.get_margin_right(),
-                            (
-                                (((taskbar_entry.rect.bottom as f64) -
-                                    (taskbar_entry.rect.top as f64)) *
-                                    resolution) as i32
-                            ) - settings.get_margin_bottom(),
+                            (((tray_entry.rect.right as f64) * resolution) as i32)
+                                - settings.get_margin_right(),
+                            ((((taskbar_entry.rect.bottom as f64)
+                                - (taskbar_entry.rect.top as f64))
+                                * resolution) as i32)
+                                - settings.get_margin_bottom(),
                             settings.get_rounded_corners_size(),
-                            settings.get_rounded_corners_size()
+                            settings.get_rounded_corners_size(),
                         );
                         CombineRgn(
                             taskbar_dynamic_region,
                             taskbar_dynamic_region,
                             tray_region,
-                            windows::Win32::Graphics::Gdi::RGN_COMBINE_MODE(2)
+                            windows::Win32::Graphics::Gdi::RGN_COMBINE_MODE(2),
                         );
                     }
 
@@ -254,7 +230,7 @@ pub fn reset_taskbar(hwnd: &HWND, rect: &RECT) {
         windows::Win32::Graphics::Gdi::SetWindowRgn(
             *hwnd,
             windows::Win32::Graphics::Gdi::HRGN::default(),
-            true
+            true,
         );
         SetLayeredWindowAttributes(*hwnd, None, 255, LWA_ALPHA);
         let mut style = GetWindowLongA(*hwnd, GWL_EXSTYLE);
@@ -262,7 +238,7 @@ pub fn reset_taskbar(hwnd: &HWND, rect: &RECT) {
             SetWindowLongA(
                 *hwnd,
                 GWL_EXSTYLE,
-                GetWindowLongA(*hwnd, GWL_EXSTYLE) ^ (WS_EX_LAYERED.0 as i32)
+                GetWindowLongA(*hwnd, GWL_EXSTYLE) ^ (WS_EX_LAYERED.0 as i32),
             );
         }
         style = GetWindowLongA(*hwnd, GWL_EXSTYLE);
@@ -270,7 +246,7 @@ pub fn reset_taskbar(hwnd: &HWND, rect: &RECT) {
             SetWindowLongA(
                 *hwnd,
                 GWL_EXSTYLE,
-                GetWindowLongA(*hwnd, GWL_EXSTYLE) ^ (WS_EX_TRANSPARENT.0 as i32)
+                GetWindowLongA(*hwnd, GWL_EXSTYLE) ^ (WS_EX_TRANSPARENT.0 as i32),
             );
         }
         // reset taskbar region
@@ -281,15 +257,13 @@ pub fn reset_taskbar(hwnd: &HWND, rect: &RECT) {
 fn get_rect_of_work_area() -> RECT {
     let mut workarea_rect = RECT::default();
     unsafe {
-        if
-            !windows::Win32::UI::WindowsAndMessaging
-                ::SystemParametersInfoW(
-                    SPI_GETWORKAREA,
-                    0,
-                    Some(&mut workarea_rect as *mut _ as *mut c_void),
-                    SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0)
-                )
-                .as_bool()
+        if !windows::Win32::UI::WindowsAndMessaging::SystemParametersInfoW(
+            SPI_GETWORKAREA,
+            0,
+            Some(&mut workarea_rect as *mut _ as *mut c_void),
+            SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0),
+        )
+        .as_bool()
         {
             /* todo: log error */
             eprintln!("could not call get workarea!");
@@ -300,8 +274,8 @@ fn get_rect_of_work_area() -> RECT {
 
 fn compare_rect_to_workspace_region_for_autohide(current_rect: &RECT, top_offset: u32) -> bool {
     let workarea_rect = get_rect_of_work_area();
-    workarea_rect.bottom - workarea_rect.top ==
-        current_rect.bottom - 1 - current_rect.top - (top_offset as i32)
+    workarea_rect.bottom - workarea_rect.top
+        == current_rect.bottom - 1 - current_rect.top - (top_offset as i32)
 }
 
 pub fn check_and_set_transparency_style(hwnd: &HWND) -> bool {
@@ -311,40 +285,36 @@ pub fn check_and_set_transparency_style(hwnd: &HWND) -> bool {
         static __WS_EX_TRANSPARENT: i32 = 0x00000020;
 
         /* check if the style is set to enable transparency first */
-        let current_style = windows::Win32::UI::WindowsAndMessaging::GetWindowLongA(
-            *hwnd,
-            GWL_EXSTYLE
-        );
-        if
-            current_style !=
-            ((WS_EX_LAYERED.0 as i32) | current_style | (WS_EX_TOOLWINDOW.0 as i32))
+        let current_style =
+            windows::Win32::UI::WindowsAndMessaging::GetWindowLongA(*hwnd, GWL_EXSTYLE);
+        if current_style != ((WS_EX_LAYERED.0 as i32) | current_style | (WS_EX_TOOLWINDOW.0 as i32))
         {
             /* set the style to enable transparency */
             windows::Win32::UI::WindowsAndMessaging::SetWindowLongW(
                 *hwnd,
                 GWL_EXSTYLE,
-                (WS_EX_LAYERED.0 as i32) | current_style | (WS_EX_TOOLWINDOW.0 as i32)
+                (WS_EX_LAYERED.0 as i32) | current_style | (WS_EX_TOOLWINDOW.0 as i32),
             );
             println!("setting taskbar to layered");
             return false;
         }
-        return true;
+        true
     }
 }
 
 pub fn set_window_alpha(hwnd: &HWND, value: u8) -> bool {
     unsafe {
-        if
-            !windows::Win32::UI::WindowsAndMessaging
-                ::SetLayeredWindowAttributes(*hwnd, None, value, LWA_ALPHA)
-                .as_bool()
+        if !windows::Win32::UI::WindowsAndMessaging::SetLayeredWindowAttributes(
+            *hwnd, None, value, LWA_ALPHA,
+        )
+        .as_bool()
         {
             /*todo: log error */
             eprintln!("could not change taskbar alpha");
             return false;
         }
     }
-    return true;
+    true
 }
 
 pub fn set_handle_to_topmost(hwnd: &HWND) {
@@ -355,13 +325,15 @@ pub fn set_handle_to_topmost(hwnd: &HWND) {
 
 pub fn set_app_bar_state(hwnd: &HWND, option: isize) {
     unsafe {
-        let mut msg = APPBARDATA::default();
-        msg.cbSize = std::mem::size_of::<APPBARDATA>() as u32;
-        msg.hWnd = *hwnd;
-        msg.lParam = windows::Win32::Foundation::LPARAM(option);
+        let mut msg = APPBARDATA {
+            cbSize: std::mem::size_of::<APPBARDATA>() as u32,
+            hWnd: *hwnd,
+            lParam: windows::Win32::Foundation::LPARAM(option),
+            ..Default::default()
+        };
         windows::Win32::UI::Shell::SHAppBarMessage(
             windows::Win32::UI::Shell::ABM_SETSTATE,
-            &mut msg
+            &mut msg,
         );
     }
 }
@@ -387,27 +359,35 @@ pub fn check_and_update_workspace_region_for_autohide(taskbar: &Taskbar, top_off
 
 fn send_workspace_and_display_change_msg() {
     unsafe {
-        PostMessageW(HWND(0xffff), WM_DISPLAYCHANGE, Foundation::WPARAM(0), Foundation::LPARAM(0));
-        PostMessageW(HWND(0xffff), WM_SETTINGCHANGE, Foundation::WPARAM(0), Foundation::LPARAM(0));
+        PostMessageW(
+            HWND(0xffff),
+            WM_DISPLAYCHANGE,
+            Foundation::WPARAM(0),
+            Foundation::LPARAM(0),
+        );
+        PostMessageW(
+            HWND(0xffff),
+            WM_SETTINGCHANGE,
+            Foundation::WPARAM(0),
+            Foundation::LPARAM(0),
+        );
     }
 }
 
 fn set_window_region_for_autohide(rect: &RECT, top_offset: u32) {
-    let mut mut_rect = rect.clone();
+    let mut mut_rect = *rect;
     mut_rect.bottom -= 1;
     mut_rect.top += top_offset as i32;
     unsafe {
-        if
-            call_and_check_set_window_region(
-                &mut_rect,
-                &[
-                    SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0),
-                    SPIF_SENDWININICHANGE | SPIF_UPDATEINIFILE | SPIF_SENDCHANGE,
-                    SPIF_SENDCHANGE,
-                    SPIF_UPDATEINIFILE,
-                ]
-            )
-        {
+        if call_and_check_set_window_region(
+            &mut_rect,
+            &[
+                SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0),
+                SPIF_SENDWININICHANGE | SPIF_UPDATEINIFILE | SPIF_SENDCHANGE,
+                SPIF_SENDCHANGE,
+                SPIF_UPDATEINIFILE,
+            ],
+        ) {
             return;
         }
         /* no call worked, todo: log error */
@@ -418,25 +398,22 @@ fn set_window_region_for_autohide(rect: &RECT, top_offset: u32) {
 
 unsafe fn call_and_check_set_window_region(
     rect: &RECT,
-    call_options: &[SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS]
+    call_options: &[SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS],
 ) -> bool {
     let mut resetted = false;
     for call_option in call_options {
-        let mut mut_rect = rect.clone();
-        if
-            windows::Win32::UI::WindowsAndMessaging
-                ::SystemParametersInfoW(
-                    SPI_SETWORKAREA,
-                    0,
-                    Some(&mut mut_rect as *mut _ as *mut c_void),
-                    *call_option
-                )
-                .as_bool()
+        let mut mut_rect = *rect;
+        if windows::Win32::UI::WindowsAndMessaging::SystemParametersInfoW(
+            SPI_SETWORKAREA,
+            0,
+            Some(&mut mut_rect as *mut _ as *mut c_void),
+            *call_option,
+        )
+        .as_bool()
+            && get_rect_of_work_area() == mut_rect
         {
-            if get_rect_of_work_area() == mut_rect {
-                println!("changed workspace correctly");
-                resetted = true;
-            }
+            println!("changed workspace correctly");
+            resetted = true;
         }
     }
     resetted
@@ -445,31 +422,26 @@ unsafe fn call_and_check_set_window_region(
 fn reset_window_region(rect: &RECT) {
     let mut mut_rect = RECT::default();
     let mut found_primary_display = false;
-    for primary_monitor in monitors
-        ::get_monitors()
-        .iter()
-        .filter(|m| m.is_primary()) {
+    for primary_monitor in monitors::get_monitors().iter().filter(|m| m.is_primary()) {
         found_primary_display = true;
         mut_rect = primary_monitor.get_display();
         let tb_height = rect.bottom - rect.top;
-        mut_rect.bottom = mut_rect.bottom - tb_height;
+        mut_rect.bottom -= tb_height;
     }
     if !found_primary_display {
         panic!("could not find primary display while calling reset on exit");
     }
 
     unsafe {
-        if
-            call_and_check_set_window_region(
-                &mut_rect,
-                &[
-                    SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0),
-                    SPIF_SENDWININICHANGE | SPIF_UPDATEINIFILE | SPIF_SENDCHANGE,
-                    SPIF_SENDCHANGE,
-                    SPIF_UPDATEINIFILE,
-                ]
-            )
-        {
+        if call_and_check_set_window_region(
+            &mut_rect,
+            &[
+                SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0),
+                SPIF_SENDWININICHANGE | SPIF_UPDATEINIFILE | SPIF_SENDCHANGE,
+                SPIF_SENDCHANGE,
+                SPIF_UPDATEINIFILE,
+            ],
+        ) {
             send_workspace_and_display_change_msg();
             return;
         }
@@ -482,7 +454,7 @@ fn reset_window_region(rect: &RECT) {
 pub fn initialize_windows_calls() {
     unsafe {
         /* Initialize system com to retrieve taskbar state in get start menu open function. Safety: None as parameter. */
-        if let Err(_) = windows::Win32::System::Com::CoInitialize(None) {/* todo: log error */}
+        if windows::Win32::System::Com::CoInitialize(None).is_err() { /* todo: log error */ }
     }
 }
 
@@ -495,7 +467,7 @@ pub fn move_window_on_tb(hwnd: &HWND, x: i32, y: i32) -> bool {
             y,
             0,
             0,
-            SWP_NOSENDCHANGING | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER | SWP_ASYNCWINDOWPOS
+            SWP_NOSENDCHANGING | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER | SWP_ASYNCWINDOWPOS,
         )
     }
 }
@@ -507,7 +479,7 @@ unsafe fn move_window(
     y: i32,
     width: i32,
     height: i32,
-    flag: SET_WINDOW_POS_FLAGS
+    flag: SET_WINDOW_POS_FLAGS,
 ) -> bool {
     SetWindowPos(*hwnd, position, x, y, width, height, flag).as_bool()
 }
@@ -515,14 +487,12 @@ unsafe fn move_window(
 pub fn get_start_menu_open() -> bool {
     let val = windows::core::GUID::from("7E5FE3D9-985F-4908-91F9-EE19F9FD1514");
     unsafe {
-        let start_menu_result: Result<
-            IAppVisibility,
-            _
-        > = windows::Win32::System::Com::CoCreateInstance(
-            &val,
-            None,
-            windows::Win32::System::Com::CLSCTX_INPROC_SERVER
-        );
+        let start_menu_result: Result<IAppVisibility, _> =
+            windows::Win32::System::Com::CoCreateInstance(
+                &val,
+                None,
+                windows::Win32::System::Com::CLSCTX_INPROC_SERVER,
+            );
         if let Ok(start_menu) = start_menu_result {
             if let Ok(result) = start_menu.IsLauncherVisible() {
                 return result.as_bool();

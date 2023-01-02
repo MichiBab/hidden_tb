@@ -1,4 +1,4 @@
-use serde::{ Deserialize, Serialize };
+use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::fs::File;
 use std::path::PathBuf;
@@ -35,12 +35,12 @@ impl TbSettings {
         match Self::try_load() {
             Some(settings) => {
                 println!("settings loaded from file");
-                return settings;
+                settings
             }
             None => {
                 let defaults = Self::load_defaults();
                 defaults.save().ok();
-                return defaults;
+                defaults
             }
         }
     }

@@ -1,10 +1,12 @@
-use crate::{ tb_settings::TbSettings };
+use crate::tb_settings::TbSettings;
 use eframe::egui;
 use egui::FontId;
 
 fn load_icon(path: &str) -> eframe::IconData {
     let (icon_rgba, icon_width, icon_height) = {
-        let image = image::open(path).expect("Failed to open icon path").into_rgba8();
+        let image = image::open(path)
+            .expect("Failed to open icon path")
+            .into_rgba8();
         let (width, height) = image.dimensions();
         let rgba = image.into_raw();
         (rgba, width, height)
@@ -34,7 +36,7 @@ pub fn open_ui() {
             };
             cc.egui_ctx.set_style(style);
             Box::new(MyApp::default())
-        })
+        }),
     );
 }
 
@@ -76,9 +78,11 @@ impl TbAccessibleSettings {
             tb_rect_detection_size_in_pixel: settings.get_tb_rect_detection_size_in_pixel(),
             enable_dynamic_borders: settings.get_enable_dynamic_borders(),
             dynamic_borders_show_tray: settings.get_dynamic_borders_show_tray(),
-            dynamic_borders_show_tray_if_disabled_on_hover: settings.get_dynamic_borders_show_tray_if_disabled_on_hover(),
+            dynamic_borders_show_tray_if_disabled_on_hover: settings
+                .get_dynamic_borders_show_tray_if_disabled_on_hover(),
             dynamic_borders_show_widgets: settings.get_dynamic_borders_show_widgets(),
-            dynamic_borders_show_widgets_if_disabled_on_hover: settings.get_dynamic_borders_show_widgets_if_disabled_on_hover(),
+            dynamic_borders_show_widgets_if_disabled_on_hover: settings
+                .get_dynamic_borders_show_widgets_if_disabled_on_hover(),
             rounded_corners_size: settings.get_rounded_corners_size(),
             margin_left: settings.get_margin_left(),
             margin_right: settings.get_margin_right(),
@@ -88,28 +92,28 @@ impl TbAccessibleSettings {
     }
 
     fn is_equal(&self, settings: &TbSettings) -> bool {
-        self.autohide == settings.get_autohide() &&
-            self.merge_tray == settings.get_merge_tray() &&
-            self.merge_widgets == settings.get_merge_widgets() &&
-            self.sleep_time_in_ms == settings.get_sleep_time_in_ms() &&
-            self.animation_time_in_ms == settings.get_animation_time_in_ms() &&
-            self.animation_steps == settings.get_animation_steps() &&
-            self.infrequent_count == settings.get_infrequent_count() &&
-            self.tb_rect_bottom_offset == settings.get_tb_rect_bottom_offset() &&
-            self.tb_rect_detection_size_in_pixel ==
-                settings.get_tb_rect_detection_size_in_pixel() &&
-            self.enable_dynamic_borders == settings.get_enable_dynamic_borders() &&
-            self.dynamic_borders_show_tray == settings.get_dynamic_borders_show_tray() &&
-            self.dynamic_borders_show_tray_if_disabled_on_hover ==
-                settings.get_dynamic_borders_show_tray_if_disabled_on_hover() &&
-            self.dynamic_borders_show_widgets == settings.get_dynamic_borders_show_widgets() &&
-            self.dynamic_borders_show_widgets_if_disabled_on_hover ==
-                settings.get_dynamic_borders_show_widgets_if_disabled_on_hover() &&
-            self.rounded_corners_size == settings.get_rounded_corners_size() &&
-            self.margin_left == settings.get_margin_left() &&
-            self.margin_right == settings.get_margin_right() &&
-            self.margin_bottom == settings.get_margin_bottom() &&
-            self.margin_top == settings.get_margin_top()
+        self.autohide == settings.get_autohide()
+            && self.merge_tray == settings.get_merge_tray()
+            && self.merge_widgets == settings.get_merge_widgets()
+            && self.sleep_time_in_ms == settings.get_sleep_time_in_ms()
+            && self.animation_time_in_ms == settings.get_animation_time_in_ms()
+            && self.animation_steps == settings.get_animation_steps()
+            && self.infrequent_count == settings.get_infrequent_count()
+            && self.tb_rect_bottom_offset == settings.get_tb_rect_bottom_offset()
+            && self.tb_rect_detection_size_in_pixel
+                == settings.get_tb_rect_detection_size_in_pixel()
+            && self.enable_dynamic_borders == settings.get_enable_dynamic_borders()
+            && self.dynamic_borders_show_tray == settings.get_dynamic_borders_show_tray()
+            && self.dynamic_borders_show_tray_if_disabled_on_hover
+                == settings.get_dynamic_borders_show_tray_if_disabled_on_hover()
+            && self.dynamic_borders_show_widgets == settings.get_dynamic_borders_show_widgets()
+            && self.dynamic_borders_show_widgets_if_disabled_on_hover
+                == settings.get_dynamic_borders_show_widgets_if_disabled_on_hover()
+            && self.rounded_corners_size == settings.get_rounded_corners_size()
+            && self.margin_left == settings.get_margin_left()
+            && self.margin_right == settings.get_margin_right()
+            && self.margin_bottom == settings.get_margin_bottom()
+            && self.margin_top == settings.get_margin_top()
     }
 }
 
@@ -137,34 +141,50 @@ impl Default for MyApp {
 
 impl MyApp {
     fn call_settings_update(&mut self) {
-        self.global_settings.set_merge_tray(self.settings.merge_tray);
-        self.global_settings.set_workspace_offset_top(self.settings.workspace_offset_top);
-        self.global_settings.set_merge_widgets(self.settings.merge_widgets);
+        self.global_settings
+            .set_merge_tray(self.settings.merge_tray);
+        self.global_settings
+            .set_workspace_offset_top(self.settings.workspace_offset_top);
+        self.global_settings
+            .set_merge_widgets(self.settings.merge_widgets);
         self.global_settings.set_autohide(self.settings.autohide);
-        self.global_settings.set_animation_steps(self.settings.animation_steps);
-        self.global_settings.set_animation_time_in_ms(self.settings.animation_time_in_ms);
-        self.global_settings.set_sleep_time_in_ms(self.settings.sleep_time_in_ms);
-        self.global_settings.set_infrequent_count(self.settings.infrequent_count);
-        self.global_settings.set_tb_rect_bottom_offset(self.settings.tb_rect_bottom_offset);
-        self.global_settings.set_tb_rect_detection_size_in_pixel(
-            self.settings.tb_rect_detection_size_in_pixel
-        );
-        self.global_settings.set_enable_dynamic_borders(self.settings.enable_dynamic_borders);
-        self.global_settings.set_dynamic_borders_show_tray(self.settings.dynamic_borders_show_tray);
-        self.global_settings.set_dynamic_borders_show_widgets_if_disabled_on_hover(
-            self.settings.dynamic_borders_show_widgets_if_disabled_on_hover
-        );
-        self.global_settings.set_dynamic_borders_show_tray_if_disabled_on_hover(
-            self.settings.dynamic_borders_show_tray_if_disabled_on_hover
-        );
-        self.global_settings.set_dynamic_borders_show_widgets(
-            self.settings.dynamic_borders_show_widgets
-        );
-        self.global_settings.set_rounded_corners_size(self.settings.rounded_corners_size);
-        self.global_settings.set_margin_left(self.settings.margin_left);
-        self.global_settings.set_margin_right(self.settings.margin_right);
-        self.global_settings.set_margin_bottom(self.settings.margin_bottom);
-        self.global_settings.set_margin_top(self.settings.margin_top);
+        self.global_settings
+            .set_animation_steps(self.settings.animation_steps);
+        self.global_settings
+            .set_animation_time_in_ms(self.settings.animation_time_in_ms);
+        self.global_settings
+            .set_sleep_time_in_ms(self.settings.sleep_time_in_ms);
+        self.global_settings
+            .set_infrequent_count(self.settings.infrequent_count);
+        self.global_settings
+            .set_tb_rect_bottom_offset(self.settings.tb_rect_bottom_offset);
+        self.global_settings
+            .set_tb_rect_detection_size_in_pixel(self.settings.tb_rect_detection_size_in_pixel);
+        self.global_settings
+            .set_enable_dynamic_borders(self.settings.enable_dynamic_borders);
+        self.global_settings
+            .set_dynamic_borders_show_tray(self.settings.dynamic_borders_show_tray);
+        self.global_settings
+            .set_dynamic_borders_show_widgets_if_disabled_on_hover(
+                self.settings
+                    .dynamic_borders_show_widgets_if_disabled_on_hover,
+            );
+        self.global_settings
+            .set_dynamic_borders_show_tray_if_disabled_on_hover(
+                self.settings.dynamic_borders_show_tray_if_disabled_on_hover,
+            );
+        self.global_settings
+            .set_dynamic_borders_show_widgets(self.settings.dynamic_borders_show_widgets);
+        self.global_settings
+            .set_rounded_corners_size(self.settings.rounded_corners_size);
+        self.global_settings
+            .set_margin_left(self.settings.margin_left);
+        self.global_settings
+            .set_margin_right(self.settings.margin_right);
+        self.global_settings
+            .set_margin_bottom(self.settings.margin_bottom);
+        self.global_settings
+            .set_margin_top(self.settings.margin_top);
     }
 
     fn formatted_string(&self, str: &str) -> egui::widget_text::RichText {

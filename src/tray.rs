@@ -90,15 +90,15 @@ mod system_tray_ui {
                 if let Some(evt_ui) = evt_ui.upgrade() {
                     match evt {
                         E::OnContextMenu => {
-                            if &handle == &evt_ui.tray {
+                            if handle == evt_ui.tray {
                                 SystemTray::show_menu(&evt_ui);
                             }
                         }
                         E::OnMenuItemSelected => {
-                            if &handle == &evt_ui.tray_exit_item {
+                            if handle == evt_ui.tray_exit_item {
                                 SystemTray::exit(&evt_ui);
                             }
-                            if &handle == &evt_ui.tray_open_settings_item {
+                            if handle == evt_ui.tray_open_settings_item {
                                 SystemTray::open_settings_ui(&evt_ui);
                             }
                         }
@@ -114,7 +114,7 @@ mod system_tray_ui {
                     handle_events,
                 ));
 
-            return Ok(ui);
+            Ok(ui)
         }
     }
 
