@@ -98,10 +98,18 @@ impl Taskbar {
             true => &self.taskbar_data.applist,
             false => &self.taskbar_data.taskbar,
         };
-        if let Some(taskbar_entry) = &wanted_handle {
+        if let Some(wanted_entry) = &wanted_handle {
             if let Some(cursor_pos) = windows_calls::get_cursor_pos() {
-                let mut hidden_rect = taskbar_entry.rect;
+                let mut hidden_rect = wanted_entry.rect;
                 hidden_rect.bottom += self.settings.get_tb_rect_bottom_offset();
+                if self.settings.get_enable_dynamic_borders() {
+                    let tb_rect = match self.taskbar_data.taskbar {
+                        Some(ref tb) => tb.rect,
+                        None => return false,
+                    };
+                    //offset the left rect to include windows and search button etc, which is not contained in the applist handleTuesday, January 3rd, 17:06:29
+                    hidden_rect.left = tb_rect.right - wanted_entry.rect.right;
+                }
                 if self.settings.get_autohide() && self.is_hidden {
                     hidden_rect.top = hidden_rect.bottom
                         - self.settings.get_tb_rect_detection_size_in_pixel()
