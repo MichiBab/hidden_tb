@@ -94,7 +94,11 @@ impl Taskbar {
     }
 
     pub fn is_hovering_on_tb(&self) -> bool {
-        if let Some(taskbar_entry) = &self.taskbar_data.taskbar {
+        let wanted_handle = match self.settings.get_enable_dynamic_borders() {
+            true => &self.taskbar_data.applist,
+            false => &self.taskbar_data.taskbar,
+        };
+        if let Some(taskbar_entry) = &wanted_handle {
             if let Some(cursor_pos) = windows_calls::get_cursor_pos() {
                 let mut hidden_rect = taskbar_entry.rect;
                 hidden_rect.bottom += self.settings.get_tb_rect_bottom_offset();
@@ -251,7 +255,10 @@ impl Taskbar {
 
         let is_hovering = self.is_hovering_on_tb();
 
-        if start_menu_open || is_hovering {
+        if start_menu_open
+            || is_hovering
+            || (self.settings.get_enable_dynamic_borders() && self.is_hovering_on_tray())
+        {
             if self.is_hidden {
                 self.show_taskbar();
             }
@@ -259,6 +266,7 @@ impl Taskbar {
             self.hide_taskbar();
         }
     }
+
     pub fn clean_up(&mut self) {
         if let Some(taskbar_data) = &self.taskbar_data.taskbar {
             windows_calls::reset_taskbar(&taskbar_data.hwnd, &taskbar_data.rect);
