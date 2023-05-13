@@ -172,6 +172,10 @@ impl Taskbar {
         }
         if changed {
             self.is_hidden = false;
+            //Set taskbar to topmost again, because it is not set to topmost when it is hidden
+            if let Some(taskbar_entry) = &self.taskbar_data.taskbar {
+                windows_calls::set_window_topmost(&taskbar_entry.hwnd);
+            }
         }
     }
 

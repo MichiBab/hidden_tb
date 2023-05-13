@@ -163,6 +163,21 @@ pub fn get_point_in_rect(rect: &RECT, point: &POINT) -> bool {
     unsafe { windows::Win32::Graphics::Gdi::PtInRect(rect, *point).as_bool() }
 }
 
+pub fn set_window_topmost(hwnd: &HWND) {
+    unsafe {
+        windows::Win32::UI::WindowsAndMessaging::SetWindowPos(
+            *hwnd,
+            HWND_TOPMOST,
+            0,
+            0,
+            0,
+            0,
+            windows::Win32::UI::WindowsAndMessaging::SWP_NOMOVE
+                | windows::Win32::UI::WindowsAndMessaging::SWP_NOSIZE,
+        );
+    }
+}
+
 pub fn create_rounded_region(
     settings: &TbSettings,
     tb_data: &TaskbarData,
