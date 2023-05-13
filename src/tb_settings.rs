@@ -57,7 +57,7 @@ impl TbSettings {
             infrequent_count: 60,
             tb_rect_detection_size_in_pixel: 2,
             tb_rect_bottom_offset: 1,
-            enable_dynamic_borders: false,
+            enable_dynamic_borders: true,
             dynamic_borders_show_tray: false,
             dynamic_borders_show_tray_if_disabled_on_hover: true,
             dynamic_borders_show_widgets: false,
