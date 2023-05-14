@@ -172,10 +172,13 @@ impl Taskbar {
         }
         if changed {
             self.is_hidden = false;
+            // Revert change, because the taskbar has problems showing in front of other widnows with geforce
+            // experience overlay enabled with showing fps counter or something else with performance overlay...
+            // after disabling it it runs.
             //Set taskbar to topmost again, because it is not set to topmost when it is hidden
-            if let Some(taskbar_entry) = &self.taskbar_data.taskbar {
-                windows_calls::set_window_topmost(&taskbar_entry.hwnd);
-            }
+            //if let Some(taskbar_entry) = &self.taskbar_data.taskbar {
+            //    windows_calls::set_window_topmost(&taskbar_entry.hwnd);
+            //}
         }
     }
 
