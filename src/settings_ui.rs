@@ -423,7 +423,7 @@ impl eframe::App for MyApp {
                                         );
 
                                         ui.label(
-                                            self.formatted_string("Dynamic app borders margin left offset multiplier:")
+                                            self.formatted_string("Dynamic app borders margin left offset:")
                                         );
                                         ui.add(
                                             egui::Slider
@@ -431,7 +431,7 @@ impl eframe::App for MyApp {
                                                 .step_by(1.0)
                                         );
                                         ui.label(
-                                            self.formatted_string("Dynamic app borders margin right offset multiplier:")
+                                            self.formatted_string("Dynamic app borders margin right offset:")
                                         );
                                         ui.add(
                                             egui::Slider
