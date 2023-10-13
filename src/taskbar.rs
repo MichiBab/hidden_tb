@@ -7,11 +7,13 @@ use crate::windows_calls::{self, TaskbarData, WantedHwnds, _ALWAYS_ON_TOP};
 pub struct Taskbar {
     settings: tb_settings::TbSettings,
     taskbar_data: windows_calls::TaskbarData,
+    current_orig_taskbar_data: windows_calls::TaskbarData,
     last_taskbar_data: windows_calls::TaskbarData,
     is_hidden: bool,
     step_value: u8,
     tray_shown_currently: bool,
     automation: Automation,
+    first_new_handles: bool,
 }
 
 impl Taskbar {
@@ -23,10 +25,12 @@ impl Taskbar {
         Taskbar {
             last_taskbar_data: TaskbarData::default(),
             taskbar_data: tb_data.clone(),
+            current_orig_taskbar_data: tb_data.clone(),
             settings,
             step_value,
             is_hidden: false,
             tray_shown_currently: false,
+            first_new_handles: true,
             automation: Automation::new(tb_data),
         }
     }
@@ -43,9 +47,13 @@ impl Taskbar {
 
     /* calls on_new_handles to update all routines that have to react on new handles. */
     pub fn insert_handles(&mut self, new_tb_data: TaskbarData) {
-        self.last_taskbar_data = self.taskbar_data.clone();
-        self.taskbar_data = new_tb_data;
-        self.on_new_handles();
+        self.last_taskbar_data = self.current_orig_taskbar_data.clone();
+        self.current_orig_taskbar_data = new_tb_data.clone();
+        if self.check_if_last_and_new_rects_changed() {
+            self.taskbar_data = new_tb_data;
+            self.on_new_handles();
+        }
+        self.first_new_handles = false;
     }
 
     pub fn refresh_area_and_set_on_top(&self) {
@@ -239,11 +247,37 @@ impl Taskbar {
         );
     }
 
+    fn check_if_last_and_new_rects_changed(&self) -> bool {
+        if let Some(last_applist) = &self.last_taskbar_data.applist {
+            if let Some(current_applist) = &self.current_orig_taskbar_data.applist {
+                if last_applist.rect != current_applist.rect {
+                    println!("Last applist rect: {:?}", last_applist.rect);
+                    println!("Current applist rect: {:?}", current_applist.rect);
+                    return true;
+                }
+            }
+        }
+        if let Some(last_tray) = &self.last_taskbar_data.tray {
+            if let Some(current_tray) = &self.current_orig_taskbar_data.tray {
+                if last_tray.rect != current_tray.rect {
+                    println!("Last tray rect: {:?}", last_tray.rect);
+                    println!("Current tray rect: {:?}", current_tray.rect);
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
     pub fn on_new_handles(&mut self) {
-        if self.settings.get_merge_tray()
+        if (self.settings.get_merge_tray()
             || self.settings.get_merge_widgets()
-            || self.settings.get_enable_dynamic_borders()
+            || self.settings.get_enable_dynamic_borders())
+            && self.check_if_last_and_new_rects_changed()
+            || self.first_new_handles
         {
+            println!("Updating rects");
+            /*Only run if applist rect != last applist rect or last tray rect != current tray rect */
             self.automation.update_tb_data(self.taskbar_data.clone());
             if let Err(e) = self.automation.update_rects() {
                 println!("Error updating rects through automation: {}", e);
@@ -267,16 +301,15 @@ impl Taskbar {
                 self.automation.current_rect.tray_up;
             self.taskbar_data.tray.as_mut().unwrap().rect.bottom =
                 self.automation.current_rect.tray_down;
-        }
-
-        if self.settings.get_merge_tray() {
-            self.merge_tray_with_applist();
-        }
-        if self.settings.get_merge_widgets() {
-            self.merge_widgets_with_applist();
-        }
-        if self.settings.get_enable_dynamic_borders() {
-            self.update_dynamic_borders();
+            if self.settings.get_merge_tray() {
+                self.merge_tray_with_applist();
+            }
+            if self.settings.get_merge_widgets() {
+                self.merge_widgets_with_applist();
+            }
+            if self.settings.get_enable_dynamic_borders() {
+                self.update_dynamic_borders();
+            }
         }
     }
 

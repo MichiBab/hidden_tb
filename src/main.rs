@@ -1,4 +1,4 @@
-#![windows_subsystem = "windows"]
+//#![windows_subsystem = "windows"]
 
 use crate::tb_settings::TbSettings;
 use std::{thread, time};
@@ -38,7 +38,7 @@ fn infrequent_routine(
             );
         }
         if settings.get_enable_dynamic_borders() {
-            taskbar.call_dynamic_update(taskbar.is_hovering_on_tray(), false);
+            //call_dynamic_update(taskbar.is_hovering_on_tray(), false);
         }
     }
     if *update_handles_in_infrequent_routine {
