@@ -1,8 +1,9 @@
 use crate::tb_settings::{self, TbSettings};
+use crate::ui_automation::Automation;
 use crate::windows_calls::{self, TaskbarData, WantedHwnds, _ALWAYS_ON_TOP};
 
 /*  */
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct Taskbar {
     settings: tb_settings::TbSettings,
     taskbar_data: windows_calls::TaskbarData,
@@ -10,6 +11,7 @@ pub struct Taskbar {
     is_hidden: bool,
     step_value: u8,
     tray_shown_currently: bool,
+    automation: Automation,
 }
 
 impl Taskbar {
@@ -20,11 +22,12 @@ impl Taskbar {
         let tb_data = windows_calls::TaskbarData::new(&wanted_hwnds);
         Taskbar {
             last_taskbar_data: TaskbarData::default(),
-            taskbar_data: tb_data,
+            taskbar_data: tb_data.clone(),
             settings,
             step_value,
             is_hidden: false,
             tray_shown_currently: false,
+            automation: Automation::new(tb_data),
         }
     }
 
@@ -237,6 +240,35 @@ impl Taskbar {
     }
 
     pub fn on_new_handles(&mut self) {
+        if self.settings.get_merge_tray()
+            || self.settings.get_merge_widgets()
+            || self.settings.get_enable_dynamic_borders()
+        {
+            self.automation.update_tb_data(self.taskbar_data.clone());
+            if let Err(e) = self.automation.update_rects() {
+                println!("Error updating rects through automation: {}", e);
+                return;
+            }
+            /* Update position of applist and tray */
+            self.taskbar_data.applist.as_mut().unwrap().rect.left =
+                self.automation.current_rect.tasklist_left;
+            self.taskbar_data.applist.as_mut().unwrap().rect.right =
+                self.automation.current_rect.tasklist_right;
+            self.taskbar_data.applist.as_mut().unwrap().rect.top =
+                self.automation.current_rect.tasklist_up;
+            self.taskbar_data.applist.as_mut().unwrap().rect.bottom =
+                self.automation.current_rect.tasklist_down;
+
+            self.taskbar_data.tray.as_mut().unwrap().rect.left =
+                self.automation.current_rect.tray_left;
+            self.taskbar_data.tray.as_mut().unwrap().rect.right =
+                self.automation.current_rect.tray_right;
+            self.taskbar_data.tray.as_mut().unwrap().rect.top =
+                self.automation.current_rect.tray_up;
+            self.taskbar_data.tray.as_mut().unwrap().rect.bottom =
+                self.automation.current_rect.tray_down;
+        }
+
         if self.settings.get_merge_tray() {
             self.merge_tray_with_applist();
         }

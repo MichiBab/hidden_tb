@@ -1,17 +1,20 @@
 #![windows_subsystem = "windows"]
 
+use crate::tb_settings::TbSettings;
 use std::{thread, time};
 use taskbar::Taskbar;
-
-use crate::tb_settings::TbSettings;
+use uiautomation::Result;
+use uiautomation::UIAutomation;
+use uiautomation::UIElement;
+use uiautomation::UITreeWalker;
 mod monitors;
 mod settings_ui;
 mod signaling;
 mod taskbar;
 mod tb_settings;
 mod tray;
+mod ui_automation;
 mod windows_calls;
-
 #[inline(always)]
 fn update_handles_of_tb(taskbar: &mut Taskbar) {
     let new_handles = taskbar.fetch_new_handles();
@@ -122,14 +125,15 @@ fn start_hidden_tb() {
         thread::sleep(dur);
     }
     taskbar.clean_up();
+    println!("Cleaned up");
     ui_handle.join().expect("tray thread finished");
 
     if signaling.get_settings_called() {
+        println!("Opening UI");
         settings_ui::open_ui();
     }
 }
 
 fn main() {
-    windows_calls::initialize_windows_calls();
     start_hidden_tb();
 }

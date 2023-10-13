@@ -154,7 +154,7 @@ impl TaskbarData {
 
 /* if the input str contains \0, this function will be unsafe */
 #[inline]
-unsafe fn string_to_pcstr(input: &str) -> windows::core::PCSTR {
+pub(crate) unsafe fn string_to_pcstr(input: &str) -> windows::core::PCSTR {
     windows::core::PCSTR::from_raw(format!("{input}\0").as_bytes().as_ptr())
 }
 
@@ -195,11 +195,13 @@ pub fn create_rounded_region(
 
                     let taskbar_dynamic_region = CreateRoundRectRgn(
                         ((center_distance as f64 - settings.get_margin_offset_left() as f64
-                            + settings.get_margin_left() as f64)
+                            + settings.get_margin_left() as f64
+                            - resolution * 0.1)
                             * resolution) as i32,
                         (resolution as i32) + settings.get_margin_top(),
                         ((applist_entry.rect.right as f64
                             + settings.get_margin_offset_right() as f64
+                            + 1.0
                             - settings.get_margin_right() as f64)
                             * resolution) as i32,
                         ((taskbar_entry.rect.bottom as f64
@@ -218,7 +220,8 @@ pub fn create_rounded_region(
                     }
                     if show_tray {
                         let tray_region = CreateRoundRectRgn(
-                            ((tray_entry.rect.left as f64 + settings.get_margin_left() as f64)
+                            ((tray_entry.rect.left as f64 + settings.get_margin_left() as f64
+                                - 3.0)
                                 * resolution) as i32,
                             (resolution as i32) * settings.get_margin_top(),
                             ((tray_entry.rect.right as f64 - settings.get_margin_right() as f64)
@@ -478,6 +481,7 @@ fn reset_window_region(rect: &RECT) {
     /* */
 }
 
+#[allow(dead_code)]
 pub fn initialize_windows_calls() {
     unsafe {
         /* Initialize system com to retrieve taskbar state in get start menu open function. Safety: None as parameter. */
