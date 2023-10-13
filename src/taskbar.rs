@@ -273,7 +273,6 @@ impl Taskbar {
         if (self.settings.get_merge_tray()
             || self.settings.get_merge_widgets()
             || self.settings.get_enable_dynamic_borders())
-            && self.check_if_last_and_new_rects_changed()
             || self.first_new_handles
         {
             println!("Updating rects");
@@ -301,6 +300,7 @@ impl Taskbar {
                 self.automation.current_rect.tray_up;
             self.taskbar_data.tray.as_mut().unwrap().rect.bottom =
                 self.automation.current_rect.tray_down;
+
             if self.settings.get_merge_tray() {
                 self.merge_tray_with_applist();
             }
