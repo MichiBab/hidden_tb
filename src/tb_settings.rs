@@ -24,6 +24,8 @@ pub struct TbSettings {
     dynamic_borders_show_widgets: bool,
     dynamic_borders_show_widgets_if_disabled_on_hover: bool,
     rounded_corners_size: i32,
+    margin_offset_left: i32,
+    margin_offset_right: i32,
     margin_left: i32,
     margin_right: i32,
     margin_bottom: i32,
@@ -67,6 +69,8 @@ impl TbSettings {
             margin_right: 2,
             margin_bottom: 2,
             margin_top: 2,
+            margin_offset_left: 0,
+            margin_offset_right: 0,
         }
     }
 
@@ -127,6 +131,30 @@ impl TbSettings {
             return;
         }
         self.margin_bottom = value;
+        self.try_save();
+    }
+
+    pub fn get_margin_offset_left(&self) -> i32 {
+        self.margin_offset_left
+    }
+
+    pub fn set_margin_offset_left(&mut self, value: i32) {
+        if self.margin_offset_left == value {
+            return;
+        }
+        self.margin_offset_left = value;
+        self.try_save();
+    }
+
+    pub fn get_margin_offset_right(&self) -> i32 {
+        self.margin_offset_right
+    }
+
+    pub fn set_margin_offset_right(&mut self, value: i32) {
+        if self.margin_offset_right == value {
+            return;
+        }
+        self.margin_offset_right = value;
         self.try_save();
     }
 

@@ -91,7 +91,7 @@ impl FormEntry {
         let mut rect = windows::Win32::Foundation::RECT::default();
         let erg = windows::Win32::UI::WindowsAndMessaging::GetWindowRect(hwnd, &mut rect);
 
-        if erg.as_bool() {
+        if erg.is_ok() {
             return Some(FormEntry { hwnd, rect });
         }
         /* todo: log error */
@@ -165,7 +165,7 @@ pub fn get_point_in_rect(rect: &RECT, point: &POINT) -> bool {
 
 pub fn set_window_topmost(hwnd: &HWND) {
     unsafe {
-        windows::Win32::UI::WindowsAndMessaging::SetWindowPos(
+        if let Err(e) = windows::Win32::UI::WindowsAndMessaging::SetWindowPos(
             *hwnd,
             HWND_TOPMOST,
             0,
@@ -174,7 +174,9 @@ pub fn set_window_topmost(hwnd: &HWND) {
             0,
             windows::Win32::UI::WindowsAndMessaging::SWP_NOMOVE
                 | windows::Win32::UI::WindowsAndMessaging::SWP_NOSIZE,
-        );
+        ) {
+            eprintln!("Error setting window to topmost: {:?}", e);
+        }
     }
 }
 
@@ -192,10 +194,13 @@ pub fn create_rounded_region(
                     let resolution = tb_data.resolution;
 
                     let taskbar_dynamic_region = CreateRoundRectRgn(
-                        (((center_distance as f64) * resolution) as i32)
+                        (((center_distance as f64 - settings.get_margin_offset_left() as f64)
+                            * resolution) as i32)
                             + settings.get_margin_left(),
                         (resolution as i32) + settings.get_margin_top(),
-                        (((applist_entry.rect.right as f64) * resolution) as i32)
+                        (((applist_entry.rect.right as f64
+                            + settings.get_margin_offset_right() as f64)
+                            * resolution) as i32)
                             - settings.get_margin_right(),
                         ((((taskbar_entry.rect.bottom as f64) - (taskbar_entry.rect.top as f64))
                             * resolution) as i32)
@@ -247,7 +252,9 @@ pub fn reset_taskbar(hwnd: &HWND, rect: &RECT) {
             windows::Win32::Graphics::Gdi::HRGN::default(),
             true,
         );
-        SetLayeredWindowAttributes(*hwnd, None, 255, LWA_ALPHA);
+        if let Err(e) = SetLayeredWindowAttributes(*hwnd, None, 255, LWA_ALPHA) {
+            eprintln!("Error setting window to topmost: {:?}", e);
+        }
         let mut style = GetWindowLongA(*hwnd, GWL_EXSTYLE);
         if (style & (WS_EX_LAYERED.0 as i32)) == (WS_EX_LAYERED.0 as i32) {
             SetWindowLongA(
@@ -272,13 +279,13 @@ pub fn reset_taskbar(hwnd: &HWND, rect: &RECT) {
 fn get_rect_of_work_area() -> RECT {
     let mut workarea_rect = RECT::default();
     unsafe {
-        if !windows::Win32::UI::WindowsAndMessaging::SystemParametersInfoW(
+        if windows::Win32::UI::WindowsAndMessaging::SystemParametersInfoW(
             SPI_GETWORKAREA,
             0,
             Some(&mut workarea_rect as *mut _ as *mut c_void),
             SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0),
         )
-        .as_bool()
+        .is_err()
         {
             /* todo: log error */
             eprintln!("could not call get workarea!");
@@ -319,13 +326,11 @@ pub fn check_and_set_transparency_style(hwnd: &HWND) -> bool {
 
 pub fn set_window_alpha(hwnd: &HWND, value: u8) -> bool {
     unsafe {
-        if !windows::Win32::UI::WindowsAndMessaging::SetLayeredWindowAttributes(
+        if let Err(e) = windows::Win32::UI::WindowsAndMessaging::SetLayeredWindowAttributes(
             *hwnd, None, value, LWA_ALPHA,
-        )
-        .as_bool()
-        {
+        ) {
             /*todo: log error */
-            eprintln!("could not change taskbar alpha");
+            eprintln!("could not change taskbar alpha: {e}");
             return false;
         }
     }
@@ -334,7 +339,9 @@ pub fn set_window_alpha(hwnd: &HWND, value: u8) -> bool {
 
 pub fn set_handle_to_topmost(hwnd: &HWND) {
     unsafe {
-        SetWindowPos(*hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+        if let Err(e) = SetWindowPos(*hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE) {
+            eprintln!("Error setting window to topmost: {:?}", e);
+        }
     }
 }
 
@@ -374,18 +381,22 @@ pub fn check_and_update_workspace_region_for_autohide(taskbar: &Taskbar, top_off
 
 fn send_workspace_and_display_change_msg() {
     unsafe {
-        PostMessageW(
+        if let Err(e) = PostMessageW(
             HWND(0xffff),
             WM_DISPLAYCHANGE,
             Foundation::WPARAM(0),
             Foundation::LPARAM(0),
-        );
-        PostMessageW(
+        ) {
+            eprintln!("Error posting message: {:?}", e);
+        }
+        if let Err(e) = PostMessageW(
             HWND(0xffff),
             WM_SETTINGCHANGE,
             Foundation::WPARAM(0),
             Foundation::LPARAM(0),
-        );
+        ) {
+            eprintln!("Error posting message: {:?}", e);
+        }
     }
 }
 
@@ -424,7 +435,7 @@ unsafe fn call_and_check_set_window_region(
             Some(&mut mut_rect as *mut _ as *mut c_void),
             *call_option,
         )
-        .as_bool()
+        .is_ok()
             && get_rect_of_work_area() == mut_rect
         {
             println!("changed workspace correctly");
@@ -496,7 +507,7 @@ unsafe fn move_window(
     height: i32,
     flag: SET_WINDOW_POS_FLAGS,
 ) -> bool {
-    SetWindowPos(*hwnd, position, x, y, width, height, flag).as_bool()
+    SetWindowPos(*hwnd, position, x, y, width, height, flag).is_ok()
 }
 
 pub fn get_start_menu_open() -> bool {
@@ -521,7 +532,7 @@ pub fn get_cursor_pos() -> Option<POINT> {
     let mut point = POINT::default();
     /* Safety: returning none if the cursor pos can not be retrieved. */
     unsafe {
-        if windows::Win32::UI::WindowsAndMessaging::GetCursorPos(&mut point).as_bool() {
+        if windows::Win32::UI::WindowsAndMessaging::GetCursorPos(&mut point).is_ok() {
             return Some(point);
         }
         /* todo: log error */

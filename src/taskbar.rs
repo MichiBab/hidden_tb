@@ -1,5 +1,6 @@
 use crate::tb_settings::{self, TbSettings};
 use crate::windows_calls::{self, TaskbarData, WantedHwnds, _ALWAYS_ON_TOP};
+
 /*  */
 #[derive(Default, Debug)]
 pub struct Taskbar {
@@ -106,8 +107,12 @@ impl Taskbar {
                         Some(ref tb) => tb.rect,
                         None => return false,
                     };
+
                     //offset the left rect to include windows and search button etc, which is not contained in the applist handle
                     hidden_rect.left = tb_rect.right - wanted_entry.rect.right;
+                    // Offset left and right applist based on margins set in the settings
+                    hidden_rect.left -= self.settings.get_margin_offset_left();
+                    hidden_rect.right += self.settings.get_margin_offset_right();
                     hidden_rect.bottom = tb_rect.bottom;
                     hidden_rect.top = tb_rect.top;
                 }
@@ -128,6 +133,7 @@ impl Taskbar {
         if let Some(taskbar_entry) = &self.taskbar_data.taskbar {
             return windows_calls::set_window_alpha(&taskbar_entry.hwnd, alpha);
         }
+
         false
     }
 

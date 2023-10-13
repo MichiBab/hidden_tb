@@ -35,7 +35,7 @@ pub fn open_ui() {
                 ..egui::Style::default()
             };
             cc.egui_ctx.set_style(style);
-            Box::new(MyApp::default())
+            Box::<MyApp>::default()
         }),
     );
 }
@@ -61,6 +61,8 @@ pub struct TbAccessibleSettings {
     margin_right: i32,
     margin_bottom: i32,
     margin_top: i32,
+    margin_offset_left: i32,
+    margin_offset_right: i32,
 }
 
 impl TbAccessibleSettings {
@@ -88,6 +90,8 @@ impl TbAccessibleSettings {
             margin_right: settings.get_margin_right(),
             margin_bottom: settings.get_margin_bottom(),
             margin_top: settings.get_margin_top(),
+            margin_offset_left: settings.get_margin_offset_left(),
+            margin_offset_right: settings.get_margin_offset_right(),
         }
     }
 
@@ -114,6 +118,8 @@ impl TbAccessibleSettings {
             && self.margin_right == settings.get_margin_right()
             && self.margin_bottom == settings.get_margin_bottom()
             && self.margin_top == settings.get_margin_top()
+            && self.margin_offset_left == settings.get_margin_offset_left()
+            && self.margin_offset_right == settings.get_margin_offset_right()
     }
 }
 
@@ -185,6 +191,10 @@ impl MyApp {
             .set_margin_bottom(self.settings.margin_bottom);
         self.global_settings
             .set_margin_top(self.settings.margin_top);
+        self.global_settings
+            .set_margin_offset_left(self.settings.margin_offset_left);
+        self.global_settings
+            .set_margin_offset_right(self.settings.margin_offset_right);
     }
 
     fn formatted_string(&self, str: &str) -> egui::widget_text::RichText {
@@ -409,6 +419,23 @@ impl eframe::App for MyApp {
                                         ui.add(
                                             egui::Slider
                                                 ::new(&mut self.settings.margin_right, -5..=20)
+                                                .step_by(1.0)
+                                        );
+
+                                        ui.label(
+                                            self.formatted_string("Dynamic app borders margin left offset multiplier:")
+                                        );
+                                        ui.add(
+                                            egui::Slider
+                                                ::new(&mut self.settings.margin_offset_left, -1000..=1000)
+                                                .step_by(1.0)
+                                        );
+                                        ui.label(
+                                            self.formatted_string("Dynamic app borders margin right offset multiplier:")
+                                        );
+                                        ui.add(
+                                            egui::Slider
+                                                ::new(&mut self.settings.margin_offset_right, -1000..=1000)
                                                 .step_by(1.0)
                                         );
                                     }
