@@ -195,6 +195,7 @@ pub fn create_rounded_region(
 
                     let taskbar_dynamic_region = CreateRoundRectRgn(
                         ((center_distance as f64 - settings.get_margin_offset_left() as f64
+                            + 1.0
                             + settings.get_margin_left() as f64
                             - resolution * 0.1)
                             * resolution) as i32,
