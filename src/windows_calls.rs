@@ -194,17 +194,18 @@ pub fn create_rounded_region(
                     let resolution = tb_data.resolution;
 
                     let taskbar_dynamic_region = CreateRoundRectRgn(
-                        (((center_distance as f64 - settings.get_margin_offset_left() as f64)
-                            * resolution) as i32)
-                            + settings.get_margin_left(),
+                        ((center_distance as f64 - settings.get_margin_offset_left() as f64
+                            + settings.get_margin_left() as f64)
+                            * resolution) as i32,
                         (resolution as i32) + settings.get_margin_top(),
-                        (((applist_entry.rect.right as f64
-                            + settings.get_margin_offset_right() as f64)
-                            * resolution) as i32)
-                            - settings.get_margin_right(),
-                        ((((taskbar_entry.rect.bottom as f64) - (taskbar_entry.rect.top as f64))
-                            * resolution) as i32)
-                            - settings.get_margin_bottom(),
+                        ((applist_entry.rect.right as f64
+                            + settings.get_margin_offset_right() as f64
+                            - settings.get_margin_right() as f64)
+                            * resolution) as i32,
+                        ((taskbar_entry.rect.bottom as f64
+                            - settings.get_margin_bottom() as f64
+                            - taskbar_entry.rect.top as f64)
+                            * resolution) as i32,
                         settings.get_rounded_corners_size(),
                         settings.get_rounded_corners_size(),
                     );
@@ -217,15 +218,15 @@ pub fn create_rounded_region(
                     }
                     if show_tray {
                         let tray_region = CreateRoundRectRgn(
-                            (((tray_entry.rect.left as f64) * resolution) as i32)
-                                + settings.get_margin_left(),
-                            (resolution as i32) + settings.get_margin_top(),
-                            (((tray_entry.rect.right as f64) * resolution) as i32)
-                                - settings.get_margin_right(),
-                            ((((taskbar_entry.rect.bottom as f64)
-                                - (taskbar_entry.rect.top as f64))
-                                * resolution) as i32)
-                                - settings.get_margin_bottom(),
+                            ((tray_entry.rect.left as f64 + settings.get_margin_left() as f64)
+                                * resolution) as i32,
+                            (resolution as i32) * settings.get_margin_top(),
+                            ((tray_entry.rect.right as f64 - settings.get_margin_right() as f64)
+                                * resolution) as i32,
+                            ((taskbar_entry.rect.bottom as f64
+                                - settings.get_margin_bottom() as f64
+                                - taskbar_entry.rect.top as f64)
+                                * resolution) as i32,
                             settings.get_rounded_corners_size(),
                             settings.get_rounded_corners_size(),
                         );
