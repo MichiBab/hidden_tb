@@ -37,8 +37,9 @@ impl Taskbar {
 
     pub fn refresh_handles(&mut self) {
         let taskbar_data = windows_calls::TaskbarData::new(&WantedHwnds::new(&self.settings));
-        self.taskbar_data = taskbar_data.clone();
-        self.last_taskbar_data = taskbar_data;
+        self.taskbar_data = taskbar_data;
+        self.last_taskbar_data = TaskbarData::default();
+        self.first_new_handles = false;
     }
 
     pub fn fetch_new_handles(&self) -> TaskbarData {
@@ -269,6 +270,40 @@ impl Taskbar {
         false
     }
 
+    pub fn automation_routine(&mut self) {
+        self.automation.update_tb_data(self.taskbar_data.clone());
+        if let Err(e) = self.automation.update_rects() {
+            println!("Error updating rects through automation: {}", e);
+            return;
+        }
+        /* Update position of applist and tray */
+        self.taskbar_data.applist.as_mut().unwrap().rect.left =
+            self.automation.current_rect.tasklist_left;
+        self.taskbar_data.applist.as_mut().unwrap().rect.right =
+            self.automation.current_rect.tasklist_right;
+        self.taskbar_data.applist.as_mut().unwrap().rect.top =
+            self.automation.current_rect.tasklist_up;
+        self.taskbar_data.applist.as_mut().unwrap().rect.bottom =
+            self.automation.current_rect.tasklist_down;
+
+        self.taskbar_data.tray.as_mut().unwrap().rect.left = self.automation.current_rect.tray_left;
+        self.taskbar_data.tray.as_mut().unwrap().rect.right =
+            self.automation.current_rect.tray_right;
+        self.taskbar_data.tray.as_mut().unwrap().rect.top = self.automation.current_rect.tray_up;
+        self.taskbar_data.tray.as_mut().unwrap().rect.bottom =
+            self.automation.current_rect.tray_down;
+
+        if self.settings.get_merge_tray() {
+            self.merge_tray_with_applist();
+        }
+        if self.settings.get_merge_widgets() {
+            self.merge_widgets_with_applist();
+        }
+        if self.settings.get_enable_dynamic_borders() {
+            self.update_dynamic_borders();
+        }
+    }
+
     pub fn on_new_handles(&mut self) {
         if (self.settings.get_merge_tray()
             || self.settings.get_merge_widgets()
@@ -277,39 +312,7 @@ impl Taskbar {
         {
             println!("Updating rects");
             /*Only run if applist rect != last applist rect or last tray rect != current tray rect */
-            self.automation.update_tb_data(self.taskbar_data.clone());
-            if let Err(e) = self.automation.update_rects() {
-                println!("Error updating rects through automation: {}", e);
-                return;
-            }
-            /* Update position of applist and tray */
-            self.taskbar_data.applist.as_mut().unwrap().rect.left =
-                self.automation.current_rect.tasklist_left;
-            self.taskbar_data.applist.as_mut().unwrap().rect.right =
-                self.automation.current_rect.tasklist_right;
-            self.taskbar_data.applist.as_mut().unwrap().rect.top =
-                self.automation.current_rect.tasklist_up;
-            self.taskbar_data.applist.as_mut().unwrap().rect.bottom =
-                self.automation.current_rect.tasklist_down;
-
-            self.taskbar_data.tray.as_mut().unwrap().rect.left =
-                self.automation.current_rect.tray_left;
-            self.taskbar_data.tray.as_mut().unwrap().rect.right =
-                self.automation.current_rect.tray_right;
-            self.taskbar_data.tray.as_mut().unwrap().rect.top =
-                self.automation.current_rect.tray_up;
-            self.taskbar_data.tray.as_mut().unwrap().rect.bottom =
-                self.automation.current_rect.tray_down;
-
-            if self.settings.get_merge_tray() {
-                self.merge_tray_with_applist();
-            }
-            if self.settings.get_merge_widgets() {
-                self.merge_widgets_with_applist();
-            }
-            if self.settings.get_enable_dynamic_borders() {
-                self.update_dynamic_borders();
-            }
+            self.automation_routine();
         }
     }
 
