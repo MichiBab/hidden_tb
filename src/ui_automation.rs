@@ -72,7 +72,7 @@ impl Automation {
             .element_from_handle(uiautomation::types::Handle::from(
                 self.tb_data.taskbar.as_ref().ok_or("No handle found")?.hwnd,
             ))?;
-        self.iterate_elements(element, &mut tasklist, &mut traylist)?;
+        self.iterate_elements(element, &mut tasklist, &mut traylist, 0)?;
         if tasklist.is_empty() || traylist.is_empty() {
             return Err("No elements found".into());
         }
@@ -102,27 +102,45 @@ impl Automation {
         element: &UIElement,
         tasklist: &mut Vec<UIElement>,
         traylist: &mut Vec<UIElement>,
+        depth: usize,
     ) -> Result<()> {
-        if element.get_classname()? == "Taskbar.TaskListButtonAutomationPeer"
-            || element.get_classname()? == "ToggleButton"
-        {
+        if depth == 3 {
             tasklist.push(element.clone());
+            return Ok(());
         }
-
-        if element.get_classname()?.starts_with("SystemTray.") {
-            traylist.push(element.clone());
-        }
-
-        if let Ok(child) = self.walker.get_first_child(element) {
-            self.iterate_elements(&child, tasklist, traylist)?;
-
-            let mut next = child;
-            while let Ok(sibling) = self.walker.get_next_sibling(&next) {
-                self.iterate_elements(&sibling, tasklist, traylist)?;
-                next = sibling;
+        if depth == 2 {
+            if element.get_classname()?.starts_with("SystemTray.") {
+                traylist.push(element.clone());
+                return Ok(());
             }
         }
 
+        if depth == 2 {
+            if let Ok(child) = self.walker.get_first_child(element) {
+                self.iterate_elements(&child, tasklist, traylist, depth + 1)?;
+            }
+            if let Ok(child) = self.walker.get_last_child(element) {
+                self.iterate_elements(&child, tasklist, traylist, depth + 1)?;
+            }
+            return Ok(());
+        }
+
+        if let Ok(child) = self.walker.get_first_child(element) {
+            self.iterate_elements(&child, tasklist, traylist, depth + 1)?;
+
+            let mut next = child;
+            let mut counter = 0;
+            while let Ok(sibling) = self.walker.get_next_sibling(&next) {
+                if counter == 0 {
+                    self.iterate_elements(&sibling, tasklist, traylist, depth + 1)?;
+                }
+                next = sibling;
+                counter += 1;
+            }
+            if counter > 1 {
+                self.iterate_elements(&next, tasklist, traylist, depth + 1)?;
+            }
+        }
         Ok(())
     }
 }

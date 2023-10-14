@@ -193,7 +193,7 @@ pub fn create_rounded_region(
                     let resolution = tb_data.resolution;
 
                     let taskbar_dynamic_region = CreateRoundRectRgn(
-                        ((applist_entry.rect.left as f64
+                        (((taskbar_entry.rect.right - applist_entry.rect.right) as f64
                             + (settings.get_margin_left() as f64
                                 - settings.get_margin_offset_left() as f64))
                             * resolution) as i32,
