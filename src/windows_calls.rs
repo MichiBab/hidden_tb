@@ -190,22 +190,23 @@ pub fn create_rounded_region(
         if let Some(tray_entry) = &tb_data.tray {
             if let Some(applist_entry) = &tb_data.applist {
                 unsafe {
-                    let center_distance = taskbar_entry.rect.right - applist_entry.rect.right;
                     let resolution = tb_data.resolution;
 
                     let taskbar_dynamic_region = CreateRoundRectRgn(
-                        ((center_distance as f64 - settings.get_margin_offset_left() as f64
-                            + 1.0
-                            + settings.get_margin_left() as f64
-                            - resolution * 0.1)
+                        ((applist_entry.rect.left as f64
+                            + (settings.get_margin_left() as f64
+                                - settings.get_margin_offset_left() as f64))
                             * resolution) as i32,
                         (resolution as i32) + settings.get_margin_top(),
                         ((applist_entry.rect.right as f64
-                            + settings.get_margin_offset_right() as f64
-                            + 1.0
-                            - settings.get_margin_right() as f64)
-                            * resolution) as i32,
-                        ((taskbar_entry.rect.bottom as f64
+                            - (settings.get_margin_right() as f64
+                                + settings.get_margin_offset_right() as f64)
+                            + resolution * 0.2
+                            + 1.0)
+                            .ceil()
+                            * resolution)
+                            .ceil() as i32,
+                        ((taskbar_entry.rect.bottom as f64 + 1.0
                             - settings.get_margin_bottom() as f64
                             - taskbar_entry.rect.top as f64)
                             * resolution) as i32,
@@ -222,7 +223,7 @@ pub fn create_rounded_region(
                     if show_tray {
                         let tray_region = CreateRoundRectRgn(
                             ((tray_entry.rect.left as f64 + settings.get_margin_left() as f64
-                                - 3.0)
+                                - 1.5 * resolution)
                                 * resolution) as i32,
                             (resolution as i32) * settings.get_margin_top(),
                             ((tray_entry.rect.right as f64 - settings.get_margin_right() as f64)
