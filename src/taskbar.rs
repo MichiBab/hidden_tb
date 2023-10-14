@@ -213,32 +213,6 @@ impl Taskbar {
         //TODO
     }
 
-    fn update_dynamic_borders(&mut self) {
-        //create region
-        let mut nothing_changed = true;
-        if let Some(last_applist) = &self.last_taskbar_data.applist {
-            if let Some(current_applist) = &self.taskbar_data.applist {
-                if last_applist.rect != current_applist.rect {
-                    nothing_changed = false;
-                }
-            }
-        }
-        if self.settings.get_dynamic_borders_show_tray() {
-            if let Some(last_tray) = &self.last_taskbar_data.tray {
-                if let Some(current_tray) = &self.taskbar_data.tray {
-                    if last_tray.rect != current_tray.rect {
-                        nothing_changed = false;
-                    }
-                }
-            }
-        }
-
-        if nothing_changed {
-            return;
-        }
-        self.call_dynamic_update(self.is_hovering_on_tray(), false);
-    }
-
     pub fn call_dynamic_update(&mut self, hovering_over_tray: bool, hovering_over_widgets: bool) {
         windows_calls::create_rounded_region(
             &self.settings,
@@ -301,7 +275,7 @@ impl Taskbar {
             self.merge_widgets_with_applist();
         }
         if self.settings.get_enable_dynamic_borders() {
-            self.update_dynamic_borders();
+            self.call_dynamic_update(self.is_hovering_on_tray(), false);
         }
     }
 
