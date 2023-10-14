@@ -228,7 +228,7 @@ pub fn create_rounded_region(
                             (resolution as i32) * settings.get_margin_top(),
                             ((tray_entry.rect.right as f64 - settings.get_margin_right() as f64)
                                 * resolution) as i32,
-                            ((taskbar_entry.rect.bottom as f64
+                            ((taskbar_entry.rect.bottom as f64 + 1.0
                                 - settings.get_margin_bottom() as f64
                                 - taskbar_entry.rect.top as f64)
                                 * resolution) as i32,
