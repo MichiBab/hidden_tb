@@ -57,7 +57,7 @@ impl TbSettings {
             animation_time_in_ms: 10,
             animation_steps: 8,
             infrequent_count: 60,
-            tb_rect_detection_size_in_pixel: 2,
+            tb_rect_detection_size_in_pixel: 1,
             tb_rect_bottom_offset: 1,
             enable_dynamic_borders: true,
             dynamic_borders_show_tray: false,
