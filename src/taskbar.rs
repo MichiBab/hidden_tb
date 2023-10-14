@@ -274,6 +274,7 @@ impl Taskbar {
         self.automation.update_tb_data(self.taskbar_data.clone());
         if let Err(e) = self.automation.update_rects() {
             println!("Error updating rects through automation: {}", e);
+            self.first_new_handles = true;
             return;
         }
         /* Update position of applist and tray */
