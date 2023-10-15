@@ -14,6 +14,7 @@ pub struct Taskbar {
     tray_shown_currently: bool,
     automation: Automation,
     first_new_handles: bool,
+    display_rect: Option<windows::Win32::Foundation::RECT>,
 }
 
 impl Taskbar {
@@ -32,6 +33,7 @@ impl Taskbar {
             tray_shown_currently: false,
             first_new_handles: true,
             automation: Automation::new(tb_data),
+            display_rect: None,
         }
     }
 
@@ -39,7 +41,6 @@ impl Taskbar {
         let taskbar_data = windows_calls::TaskbarData::new(&WantedHwnds::new(&self.settings));
         self.taskbar_data = taskbar_data;
         self.last_taskbar_data = TaskbarData::default();
-        self.first_new_handles = false;
     }
 
     pub fn fetch_new_handles(&self) -> TaskbarData {
@@ -50,7 +51,7 @@ impl Taskbar {
     pub fn insert_handles(&mut self, new_tb_data: TaskbarData) {
         self.last_taskbar_data = self.current_orig_taskbar_data.clone();
         self.current_orig_taskbar_data = new_tb_data.clone();
-        if self.check_if_last_and_new_rects_changed() {
+        if self.check_if_last_and_new_rects_changed() || self.first_new_handles {
             self.taskbar_data = new_tb_data;
             self.on_new_handles();
         }
@@ -222,6 +223,10 @@ impl Taskbar {
         );
     }
 
+    pub fn set_display_area(&mut self, display_rect: windows::Win32::Foundation::RECT) {
+        self.display_rect = Some(display_rect);
+    }
+
     fn check_if_last_and_new_rects_changed(&self) -> bool {
         if let Some(last_applist) = &self.last_taskbar_data.applist {
             if let Some(current_applist) = &self.current_orig_taskbar_data.applist {
@@ -245,10 +250,13 @@ impl Taskbar {
     }
 
     pub fn automation_routine(&mut self) {
+        self.taskbar_data.display_rect = self.display_rect;
         self.automation.update_tb_data(self.taskbar_data.clone());
         if let Err(e) = self.automation.update_rects() {
             println!("Error updating rects through automation: {}", e);
             self.first_new_handles = true;
+            self.last_taskbar_data = TaskbarData::default();
+            self.current_orig_taskbar_data = TaskbarData::default();
             return;
         }
         /* Update position of applist and tray */

@@ -77,6 +77,8 @@ pub struct TaskbarData {
     pub apps: Option<FormEntry>,
 
     pub wanted_hwnds: WantedHwnds,
+
+    pub display_rect: Option<RECT>,
 }
 
 impl FormEntry {
@@ -367,11 +369,12 @@ pub fn set_app_bar_state(hwnd: &HWND, option: isize) {
 }
 
 /* this function checks if each monitor is configured correctly for the autohide feature. */
-pub fn check_and_update_workspace_region_for_autohide(taskbar: &Taskbar, top_offset: u32) {
+pub fn check_and_update_workspace_region_for_autohide(taskbar: &mut Taskbar, top_offset: u32) {
     let mut change_in_workspace = false;
     let monitors = monitors::get_monitors();
     for primary_monitor in monitors.iter().filter(|m| m.is_primary()) {
         let display_area = primary_monitor.get_display();
+        taskbar.set_display_area(display_area);
         if !compare_rect_to_workspace_region_for_autohide(&display_area, top_offset) {
             /* work area is not configured correctly. Setting to autohide. */
             println!("calling set window region");

@@ -24,7 +24,7 @@ impl fmt::Debug for Automation {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct AutomationRects {
     pub tasklist_left: i32,
     pub tasklist_right: i32,
@@ -42,16 +42,7 @@ impl Automation {
         let walker: UITreeWalker = automation
             .get_control_view_walker()
             .expect("Failed to get walker");
-        let current_rect = AutomationRects {
-            tasklist_left: 0,
-            tasklist_right: 0,
-            tasklist_up: 0,
-            tasklist_down: 0,
-            tray_left: 0,
-            tray_right: 0,
-            tray_up: 0,
-            tray_down: 0,
-        };
+        let current_rect = AutomationRects::default();
         Self {
             walker,
             automation,
@@ -65,6 +56,11 @@ impl Automation {
     }
 
     pub fn update_rects(&mut self) -> Result<()> {
+        if self.tb_data.display_rect.is_none() {
+            self.current_rect = AutomationRects::default();
+            return Err("No display rect found".into());
+        }
+
         let mut tasklist: Vec<UIElement> = Vec::new();
         let mut traylist: Vec<UIElement> = Vec::new();
         let element = &self
@@ -94,6 +90,8 @@ impl Automation {
             tray_up: traylist[0].get_bounding_rectangle()?.get_top(),
             tray_down: traylist[0].get_bounding_rectangle()?.get_bottom(),
         };
+        println!("TASKLIST: {:?}", tasklist);
+        println!("TRAYLIST: {:?}", traylist);
         Ok(())
     }
 
