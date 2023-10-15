@@ -288,10 +288,9 @@ impl Taskbar {
     }
 
     pub fn on_new_handles(&mut self) {
-        if (self.settings.get_merge_tray()
+        if self.settings.get_merge_tray()
             || self.settings.get_merge_widgets()
-            || self.settings.get_enable_dynamic_borders())
-            || self.first_new_handles
+            || self.settings.get_enable_dynamic_borders()
         {
             println!("Updating rects");
             /*Only run if applist rect != last applist rect or last tray rect != current tray rect */
