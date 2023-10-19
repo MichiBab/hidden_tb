@@ -1,4 +1,4 @@
-#![windows_subsystem = "windows"]
+//#![windows_subsystem = "windows"]
 
 use crate::tb_settings::TbSettings;
 use std::{thread, time};
@@ -42,6 +42,7 @@ fn infrequent_routine(
         }
     }
     if *update_handles_in_infrequent_routine {
+        println!("updating handles");
         update_handles_of_tb(taskbar);
     }
 }

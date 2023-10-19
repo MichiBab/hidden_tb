@@ -56,6 +56,8 @@ impl Automation {
     }
 
     pub fn update_rects(&mut self) -> Result<()> {
+        //SIMULATE THE BUG: If this function takes too long, e.g. using a sleep, then the taskbar will look bad.
+        //std::thread::sleep(std::time::Duration::from_millis(1000));
         if self.tb_data.display_rect.is_none() {
             self.current_rect = AutomationRects::default();
             return Err("No display rect found".into());
