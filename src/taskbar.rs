@@ -52,11 +52,10 @@ impl Taskbar {
         self.last_taskbar_data = self.current_orig_taskbar_data.clone();
         self.current_orig_taskbar_data = new_tb_data.clone();
         if self.check_if_last_and_new_rects_changed() || self.first_new_handles {
-            self.first_new_handles = false;
-            println!("Going into call new handles");
             self.taskbar_data = new_tb_data;
             self.on_new_handles();
         }
+        self.first_new_handles = false;
     }
 
     pub fn refresh_area_and_set_on_top(&self) {
@@ -215,17 +214,13 @@ impl Taskbar {
         //TODO
     }
 
-    pub fn call_dynamic_update(
-        &mut self,
-        hovering_over_tray: bool,
-        hovering_over_widgets: bool,
-    ) -> bool {
+    pub fn call_dynamic_update(&mut self, hovering_over_tray: bool, hovering_over_widgets: bool) {
         windows_calls::create_rounded_region(
             &self.settings,
             &self.taskbar_data,
             hovering_over_tray,
             hovering_over_widgets,
-        )
+        );
     }
 
     pub fn set_display_area(&mut self, display_rect: windows::Win32::Foundation::RECT) {
@@ -287,14 +282,8 @@ impl Taskbar {
         if self.settings.get_merge_widgets() {
             self.merge_widgets_with_applist();
         }
-        println!("Taskbar calling dyn update!");
-        if self.settings.get_enable_dynamic_borders()
-            && !self.call_dynamic_update(self.is_hovering_on_tray(), false)
-        {
-            println!("Error calling dynamic update");
-            self.first_new_handles = true;
-            self.last_taskbar_data = TaskbarData::default();
-            self.current_orig_taskbar_data = TaskbarData::default();
+        if self.settings.get_enable_dynamic_borders() {
+            self.call_dynamic_update(self.is_hovering_on_tray(), false);
         }
     }
 
