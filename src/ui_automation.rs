@@ -68,7 +68,7 @@ impl Automation {
             .element_from_handle(uiautomation::types::Handle::from(
                 self.tb_data.taskbar.as_ref().ok_or("No handle found")?.hwnd,
             ))?;
-        self.iterate_elements(element, &mut tasklist, &mut traylist, 0)?;
+        self.iterate_elements(element, &mut tasklist, &mut traylist)?;
         if tasklist.is_empty() || traylist.is_empty() {
             return Err("No elements found".into());
         }
@@ -92,6 +92,32 @@ impl Automation {
         };
         println!("TASKLIST: {:?}", tasklist);
         println!("TRAYLIST: {:?}", traylist);
+        println!("Len Tasklist: {}", tasklist.len());
+        if tasklist.len() > 2 {
+            //Calculate the width of one taskbar button
+            let tasklist_width = tasklist[tasklist.len() / 2]
+                .get_bounding_rectangle()?
+                .get_left()
+                .checked_sub(
+                    tasklist[(tasklist.len() / 2) - 1]
+                        .get_bounding_rectangle()?
+                        .get_left(),
+                )
+                .ok_or("No left")?;
+            println!("Tasklist width: {}", tasklist_width);
+            //Set the width of the taskbar buttons to the width of one button times the number of buttons
+            //The middle is the middle of the desktop rect minus half the width of the taskbar buttons
+
+            let display = self.tb_data.display_rect.ok_or("No display rect")?;
+            let middle = display.left + (display.right - display.left) / 2;
+            let left = middle - (tasklist_width * tasklist.len() as i32) / 2;
+            let right = middle + (tasklist_width * tasklist.len() as i32) / 2;
+            println!("Left: {}, Right: {}", left, right);
+            println!(
+                "current Left: {}, Right: {}",
+                self.current_rect.tasklist_left, self.current_rect.tasklist_right
+            );
+        }
         Ok(())
     }
 
@@ -100,45 +126,27 @@ impl Automation {
         element: &UIElement,
         tasklist: &mut Vec<UIElement>,
         traylist: &mut Vec<UIElement>,
-        depth: usize,
     ) -> Result<()> {
-        if depth == 3 {
+        if element.get_classname()? == "Taskbar.TaskListButtonAutomationPeer"
+            || element.get_classname()? == "ToggleButton"
+        {
             tasklist.push(element.clone());
-            return Ok(());
-        }
-        if depth == 2 {
-            if element.get_classname()?.starts_with("SystemTray.") {
-                traylist.push(element.clone());
-                return Ok(());
-            }
         }
 
-        if depth == 2 {
-            if let Ok(child) = self.walker.get_first_child(element) {
-                self.iterate_elements(&child, tasklist, traylist, depth + 1)?;
-            }
-            if let Ok(child) = self.walker.get_last_child(element) {
-                self.iterate_elements(&child, tasklist, traylist, depth + 1)?;
-            }
-            return Ok(());
+        if element.get_classname()?.starts_with("SystemTray.") {
+            traylist.push(element.clone());
         }
 
         if let Ok(child) = self.walker.get_first_child(element) {
-            self.iterate_elements(&child, tasklist, traylist, depth + 1)?;
+            self.iterate_elements(&child, tasklist, traylist)?;
 
             let mut next = child;
-            let mut counter = 0;
             while let Ok(sibling) = self.walker.get_next_sibling(&next) {
-                if counter == 0 {
-                    self.iterate_elements(&sibling, tasklist, traylist, depth + 1)?;
-                }
+                self.iterate_elements(&sibling, tasklist, traylist)?;
                 next = sibling;
-                counter += 1;
-            }
-            if counter > 1 {
-                self.iterate_elements(&next, tasklist, traylist, depth + 1)?;
             }
         }
+
         Ok(())
     }
 }

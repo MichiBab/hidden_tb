@@ -245,7 +245,7 @@ pub fn create_rounded_region(
                         );
                     }
 
-                    println!("calling setWindowRgn");
+                    //println!("calling setWindowRgn");
                     SetWindowRgn(taskbar_entry.hwnd, taskbar_dynamic_region, true);
                 }
             }
@@ -377,7 +377,7 @@ pub fn check_and_update_workspace_region_for_autohide(taskbar: &mut Taskbar, top
         taskbar.set_display_area(display_area);
         if !compare_rect_to_workspace_region_for_autohide(&display_area, top_offset) {
             /* work area is not configured correctly. Setting to autohide. */
-            println!("calling set window region");
+            //println!("calling set window region");
             set_window_region_for_autohide(&display_area, top_offset);
             change_in_workspace = true;
         }
