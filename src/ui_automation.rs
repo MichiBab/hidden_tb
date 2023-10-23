@@ -95,16 +95,7 @@ impl Automation {
         println!("Len Tasklist: {}", tasklist.len());
         if tasklist.len() > 2 {
             //Calculate the width of one taskbar button
-            let tasklist_width = tasklist[tasklist.len() / 2]
-                .get_bounding_rectangle()?
-                .get_left()
-                .checked_sub(
-                    tasklist[(tasklist.len() / 2) - 1]
-                        .get_bounding_rectangle()?
-                        .get_left(),
-                )
-                .ok_or("No left")?;
-            println!("Tasklist width: {}", tasklist_width);
+            let tasklist_width = 44;
             //Set the width of the taskbar buttons to the width of one button times the number of buttons
             //The middle is the middle of the desktop rect minus half the width of the taskbar buttons
 
@@ -117,6 +108,8 @@ impl Automation {
                 "current Left: {}, Right: {}",
                 self.current_rect.tasklist_left, self.current_rect.tasklist_right
             );
+            self.current_rect.tasklist_left = left;
+            self.current_rect.tasklist_right = right;
         }
         Ok(())
     }

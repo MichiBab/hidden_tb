@@ -224,7 +224,17 @@ impl Taskbar {
     }
 
     pub fn set_display_area(&mut self, display_rect: windows::Win32::Foundation::RECT) {
+        let last_display_rect = self.display_rect;
+
         self.display_rect = Some(display_rect);
+        if let Some(last_display_rect) = last_display_rect {
+            if last_display_rect != display_rect {
+                self.first_new_handles = true;
+                self.last_taskbar_data = TaskbarData::default();
+                self.current_orig_taskbar_data = TaskbarData::default();
+                self.automation_routine();
+            }
+        }
     }
 
     fn check_if_last_and_new_rects_changed(&self) -> bool {
