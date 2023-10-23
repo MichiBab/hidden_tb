@@ -187,7 +187,7 @@ pub fn create_rounded_region(
     tb_data: &TaskbarData,
     hovering_over_tray: bool,
     _hovering_over_widgets: bool,
-) {
+) -> bool {
     if let Some(taskbar_entry) = &tb_data.taskbar {
         if let Some(tray_entry) = &tb_data.tray {
             if let Some(applist_entry) = &tb_data.applist {
@@ -251,6 +251,7 @@ pub fn create_rounded_region(
             }
         }
     }
+    false
 }
 
 pub fn reset_taskbar(hwnd: &HWND, rect: &RECT) {
