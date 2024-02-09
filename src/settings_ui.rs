@@ -63,6 +63,7 @@ pub struct TbAccessibleSettings {
     margin_top: i32,
     margin_offset_left: i32,
     margin_offset_right: i32,
+    windows_11_bugfix: bool,
 }
 
 impl TbAccessibleSettings {
@@ -92,6 +93,7 @@ impl TbAccessibleSettings {
             margin_top: settings.get_margin_top(),
             margin_offset_left: settings.get_margin_offset_left(),
             margin_offset_right: settings.get_margin_offset_right(),
+            windows_11_bugfix: settings.get_windows_11_bugfix(),
         }
     }
 
@@ -120,6 +122,8 @@ impl TbAccessibleSettings {
             && self.margin_top == settings.get_margin_top()
             && self.margin_offset_left == settings.get_margin_offset_left()
             && self.margin_offset_right == settings.get_margin_offset_right()
+            && self.workspace_offset_top == settings.get_workspace_offset_top()
+            && self.windows_11_bugfix == settings.get_windows_11_bugfix()
     }
 }
 
@@ -195,6 +199,8 @@ impl MyApp {
             .set_margin_offset_left(self.settings.margin_offset_left);
         self.global_settings
             .set_margin_offset_right(self.settings.margin_offset_right);
+        self.global_settings
+            .set_windows_11_bugfix(self.settings.windows_11_bugfix);
     }
 
     fn formatted_string(&self, str: &str) -> egui::widget_text::RichText {
@@ -320,7 +326,7 @@ impl eframe::App for MyApp {
                             });
                             ui.separator();
 
-                            let scroll_area = egui::ScrollArea::new([true, true]).max_height(200.0);
+                            let scroll_area: egui::ScrollArea = egui::ScrollArea::new([true, true]).max_height(200.0);
 
                             scroll_area.show(ui, |ui| {
                                 ui.vertical(|ui| {
@@ -438,6 +444,16 @@ impl eframe::App for MyApp {
                                                 ::new(&mut self.settings.margin_offset_right, -1000..=1000)
                                                 .step_by(1.0)
                                         );
+
+                                        ui.add_space(SPACING);
+                                        ui.label(
+                                            self.formatted_small_string(
+                                                "This fixes the taskbar size on newer windows 11 builds. If your Taskbar looks wrong, disable this and try again."
+                                            )
+                                        );
+                                        let check_box_text = self.formatted_string("Windows 11 Bugfix");
+                                        ui.checkbox(&mut self.settings.windows_11_bugfix, check_box_text);
+                                        
                                     }
                                 });
                             });
@@ -476,9 +492,10 @@ impl eframe::App for MyApp {
                             ui.separator();
 
                             ui.add_space(SPACING);
-                            let check_box_text = self.formatted_string("merge tray with applist");
-                            ui.checkbox(&mut self.settings.merge_tray, check_box_text);
-                            ui.add_space(SPACING);
+                            /* Too buggy atm... */
+                            //let check_box_text = self.formatted_string("merge tray with applist");
+                            //ui.checkbox(&mut self.settings.merge_tray, check_box_text);
+                            //ui.add_space(SPACING);
                             /* //TODO enable if implemented 
                             let check_box_text = self.formatted_string("merge widget with applist");
                             ui.checkbox(&mut self.settings.merge_widgets, check_box_text);

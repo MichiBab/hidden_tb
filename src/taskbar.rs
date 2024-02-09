@@ -1,5 +1,4 @@
 use crate::tb_settings::{self, TbSettings};
-use crate::ui_automation::Automation;
 use crate::windows_calls::{self, TaskbarData, WantedHwnds, _ALWAYS_ON_TOP};
 
 /*  */
@@ -12,7 +11,6 @@ pub struct Taskbar {
     is_hidden: bool,
     step_value: u8,
     tray_shown_currently: bool,
-    automation: Automation,
     first_new_handles: bool,
     display_rect: Option<windows::Win32::Foundation::RECT>,
 }
@@ -26,13 +24,12 @@ impl Taskbar {
         Taskbar {
             last_taskbar_data: TaskbarData::default(),
             taskbar_data: tb_data.clone(),
-            current_orig_taskbar_data: tb_data.clone(),
+            current_orig_taskbar_data: tb_data,
             settings,
             step_value,
             is_hidden: false,
             tray_shown_currently: false,
             first_new_handles: true,
-            automation: Automation::new(tb_data),
             display_rect: None,
         }
     }
@@ -261,30 +258,17 @@ impl Taskbar {
 
     pub fn automation_routine(&mut self) {
         self.taskbar_data.display_rect = self.display_rect;
-        self.automation.update_tb_data(self.taskbar_data.clone());
-        if let Err(e) = self.automation.update_rects() {
-            println!("Error updating rects through automation: {}", e);
-            self.first_new_handles = true;
-            self.last_taskbar_data = TaskbarData::default();
-            self.current_orig_taskbar_data = TaskbarData::default();
-            return;
-        }
-        /* Update position of applist and tray */
-        self.taskbar_data.applist.as_mut().unwrap().rect.left =
-            self.automation.current_rect.tasklist_left;
-        self.taskbar_data.applist.as_mut().unwrap().rect.right =
-            self.automation.current_rect.tasklist_right;
-        self.taskbar_data.applist.as_mut().unwrap().rect.top =
-            self.automation.current_rect.tasklist_up;
-        self.taskbar_data.applist.as_mut().unwrap().rect.bottom =
-            self.automation.current_rect.tasklist_down;
 
-        self.taskbar_data.tray.as_mut().unwrap().rect.left = self.automation.current_rect.tray_left;
-        self.taskbar_data.tray.as_mut().unwrap().rect.right =
-            self.automation.current_rect.tray_right;
-        self.taskbar_data.tray.as_mut().unwrap().rect.top = self.automation.current_rect.tray_up;
-        self.taskbar_data.tray.as_mut().unwrap().rect.bottom =
-            self.automation.current_rect.tray_down;
+        /* Bugfix Windows 11. The applist.right stores the middle now of the screen? Left is one Icon shorter aswell... */
+        if self.settings.get_windows_11_bugfix()
+            && self.taskbar_data.applist.is_some()
+            && self.taskbar_data.taskbar.is_some()
+        {
+            let applist = self.taskbar_data.applist.as_mut().unwrap();
+            let taskbar = self.taskbar_data.taskbar.as_ref().unwrap();
+            applist.rect.right = taskbar.rect.right - applist.rect.left + 44;
+            applist.rect.left = taskbar.rect.left + applist.rect.left - 44;
+        }
 
         if self.settings.get_merge_tray() {
             self.merge_tray_with_applist();

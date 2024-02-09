@@ -195,19 +195,15 @@ pub fn create_rounded_region(
                     let resolution = tb_data.resolution;
 
                     let taskbar_dynamic_region = CreateRoundRectRgn(
-                        (((taskbar_entry.rect.right - applist_entry.rect.right) as f64
-                            + (settings.get_margin_left() as f64
-                                - settings.get_margin_offset_left() as f64))
+                        (((applist_entry.rect.left) as f64
+                            - settings.get_margin_offset_left() as f64
+                            + settings.get_margin_left() as f64)
                             * resolution) as i32,
                         (resolution as i32) + settings.get_margin_top(),
-                        ((applist_entry.rect.right as f64
-                            - (settings.get_margin_right() as f64
-                                + settings.get_margin_offset_right() as f64)
-                            + resolution * 0.2
-                            + 1.0)
-                            .ceil()
-                            * resolution)
-                            .ceil() as i32,
+                        (((applist_entry.rect.right + 2) as f64
+                            + settings.get_margin_offset_right() as f64
+                            - settings.get_margin_right() as f64)
+                            * resolution) as i32,
                         ((taskbar_entry.rect.bottom as f64 + 1.0
                             - settings.get_margin_bottom() as f64
                             - taskbar_entry.rect.top as f64)
@@ -225,9 +221,9 @@ pub fn create_rounded_region(
                     if show_tray {
                         let tray_region = CreateRoundRectRgn(
                             ((tray_entry.rect.left as f64 + settings.get_margin_left() as f64
-                                - 1.5 * resolution)
+                                - 3.0)
                                 * resolution) as i32,
-                            (resolution as i32) * settings.get_margin_top(),
+                            (resolution as i32) + settings.get_margin_top(),
                             ((tray_entry.rect.right as f64 - settings.get_margin_right() as f64)
                                 * resolution) as i32,
                             ((taskbar_entry.rect.bottom as f64 + 1.0

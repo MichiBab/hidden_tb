@@ -30,6 +30,7 @@ pub struct TbSettings {
     margin_right: i32,
     margin_bottom: i32,
     margin_top: i32,
+    windows_11_bugfix: bool,
 }
 
 impl TbSettings {
@@ -67,11 +68,24 @@ impl TbSettings {
             rounded_corners_size: 4,
             margin_left: 0,
             margin_right: 0,
-            margin_bottom: 2,
-            margin_top: 2,
+            margin_bottom: 1,
+            margin_top: 1,
             margin_offset_left: 0,
             margin_offset_right: 0,
+            windows_11_bugfix: true,
         }
+    }
+
+    pub fn get_windows_11_bugfix(&self) -> bool {
+        self.windows_11_bugfix
+    }
+
+    pub fn set_windows_11_bugfix(&mut self, value: bool) {
+        if self.windows_11_bugfix == value {
+            return;
+        }
+        self.windows_11_bugfix = value;
+        self.try_save();
     }
 
     pub fn get_workspace_offset_top(&self) -> u32 {
