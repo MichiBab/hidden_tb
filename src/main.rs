@@ -98,6 +98,7 @@ fn start_hidden_tb() {
         || settings.get_enable_dynamic_borders());
 
     taskbar.automation_routine();
+    taskbar.send_restarts();
     loop {
         if signaling.get_exit_called() {
             break;

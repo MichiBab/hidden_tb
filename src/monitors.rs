@@ -18,6 +18,7 @@ impl Monitor {
 
 pub fn get_monitors() -> Vec<Monitor> {
     let mut monitors = vec![];
+    println!("Enumerating monitors");
     for monitor in enumerate_monitors() {
         /* currently only the display form is needed. Many more infos can be retrieved. */
         monitors.push(Monitor {
@@ -31,16 +32,27 @@ pub fn get_monitors() -> Vec<Monitor> {
                 == windows::Win32::UI::WindowsAndMessaging::MONITORINFOF_PRIMARY,
         })
     }
+    println!("Monitors: {:?}", monitors);
     monitors
 }
 
 fn enumerate_monitors() -> Vec<windows::Win32::Graphics::Gdi::MONITORINFOEXW> {
-    let monitors = Vec::<windows::Win32::Graphics::Gdi::MONITORINFOEXW>::new();
+    let mut monitors = Vec::<windows::Win32::Graphics::Gdi::MONITORINFOEXW>::new();
+    let monitors_ptr = Box::into_raw(Box::new(monitors)); // Allocate and get a raw pointer
+
     unsafe {
-        let data: windows::Win32::Foundation::LPARAM = std::mem::transmute(&monitors);
-        windows::Win32::Graphics::Gdi::EnumDisplayMonitors(None, None, Some(monitor_callback), data)
-    };
-    monitors
+        let data = windows::Win32::Foundation::LPARAM(monitors_ptr as isize); // Correct cast to `LPARAM`
+        windows::Win32::Graphics::Gdi::EnumDisplayMonitors(
+            None,
+            None,
+            Some(monitor_callback),
+            data,
+        );
+
+        // After the callback, we need to take ownership back of the pointer
+        let boxed_monitors = Box::from_raw(monitors_ptr);
+        *boxed_monitors // Deref the box back into the original Vec
+    }
 }
 
 unsafe extern "system" fn monitor_callback(
@@ -50,7 +62,8 @@ unsafe extern "system" fn monitor_callback(
     userdata: windows::Win32::Foundation::LPARAM,
 ) -> windows::Win32::Foundation::BOOL {
     let monitors: &mut Vec<windows::Win32::Graphics::Gdi::MONITORINFOEXW> =
-        mem::transmute(userdata);
+        &mut *(userdata.0 as *mut Vec<windows::Win32::Graphics::Gdi::MONITORINFOEXW>);
+
     let mut monitor_info: windows::Win32::Graphics::Gdi::MONITORINFOEXW = mem::zeroed();
     monitor_info.monitorInfo.cbSize =
         mem::size_of::<windows::Win32::Graphics::Gdi::MONITORINFOEXW>() as u32;

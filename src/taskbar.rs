@@ -343,6 +343,7 @@ impl Taskbar {
 
     pub fn send_restarts(&self) {
         for process in self.settings.get_restart_executables() {
+            println!("Restarting {}", process);
             if restart_process::restart_process(&process).is_err() {
                 println!("Failed to restart {}", process);
             }
