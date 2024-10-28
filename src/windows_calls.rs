@@ -1,14 +1,21 @@
 use std::ffi::c_void;
-use windows::Win32::Foundation::POINT;
+use windows::core::PWSTR;
+use windows::Win32::Foundation::{BOOL, LRESULT, MAX_PATH, POINT};
 use windows::Win32::Graphics::Gdi::{CombineRgn, CreateRoundRectRgn, SetWindowRgn};
-use windows::Win32::UI::Shell::{IAppVisibility, APPBARDATA};
+use windows::Win32::System::Threading::{
+    GetCurrentProcessId, OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_FORMAT,
+    PROCESS_QUERY_INFORMATION, PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_VM_READ,
+};
+use windows::Win32::UI::Shell::{
+    IAppVisibility, SHAppBarMessage, ABM_GETSTATE, ABM_SETSTATE, ABS_AUTOHIDE, APPBARDATA,
+};
 use windows::Win32::{Foundation, UI::WindowsAndMessaging::*};
 use Foundation::HWND;
 use Foundation::RECT;
 
-use crate::monitors;
 use crate::taskbar::Taskbar;
 use crate::tb_settings::TbSettings;
+use crate::{monitors, restart_process};
 
 pub const _AUTOHIDE: isize = 0x01;
 pub const _ALWAYS_ON_TOP: isize = 0x02;
@@ -84,12 +91,14 @@ pub struct TaskbarData {
 impl FormEntry {
     /* Safety: Don't call new with a str {name} that contains a \0 terminating character. */
     unsafe fn new(dependent_hwnd: HWND, name: &str) -> Option<FormEntry> {
-        let hwnd = windows::Win32::UI::WindowsAndMessaging::FindWindowExA(
+        let Ok(hwnd) = windows::Win32::UI::WindowsAndMessaging::FindWindowExA(
             dependent_hwnd,
             HWND_TOP,
             string_to_pcstr(name),
             windows::core::PCSTR::null(),
-        );
+        ) else {
+            return None;
+        };
         let mut rect = windows::Win32::Foundation::RECT::default();
         let erg = windows::Win32::UI::WindowsAndMessaging::GetWindowRect(hwnd, &mut rect);
 
@@ -381,27 +390,31 @@ pub fn check_and_update_workspace_region_for_autohide(taskbar: &mut Taskbar, top
     if change_in_workspace {
         send_workspace_and_display_change_msg();
         taskbar.refresh_area_and_set_on_top();
+        taskbar.send_restarts();
     }
 }
+
+const HWND_BROADCAST: HWND = HWND((-1isize) as _);
 
 fn send_workspace_and_display_change_msg() {
     unsafe {
         if let Err(e) = PostMessageW(
-            HWND(0xffff),
+            HWND_BROADCAST,
             WM_DISPLAYCHANGE,
             Foundation::WPARAM(0),
             Foundation::LPARAM(0),
         ) {
-            eprintln!("Error posting message: {:?}", e);
+            dbg!(e);
         }
         if let Err(e) = PostMessageW(
-            HWND(0xffff),
+            HWND_BROADCAST,
             WM_SETTINGCHANGE,
             Foundation::WPARAM(0),
             Foundation::LPARAM(0),
         ) {
-            eprintln!("Error posting message: {:?}", e);
+            dbg!(e);
         }
+        println!("Send update message to all windows");
     }
 }
 

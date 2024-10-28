@@ -1,3 +1,4 @@
+use crate::restart_process;
 use crate::tb_settings::{self, TbSettings};
 use crate::windows_calls::{self, TaskbarData, WantedHwnds, _ALWAYS_ON_TOP};
 
@@ -337,6 +338,14 @@ impl Taskbar {
     pub fn clean_up(&mut self) {
         if let Some(taskbar_data) = &self.taskbar_data.taskbar {
             windows_calls::reset_taskbar(&taskbar_data.hwnd, &taskbar_data.rect);
+        }
+    }
+
+    pub fn send_restarts(&self) {
+        for process in self.settings.get_restart_executables() {
+            if restart_process::restart_process(&process).is_err() {
+                println!("Failed to restart {}", process);
+            }
         }
     }
 }

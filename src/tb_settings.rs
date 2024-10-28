@@ -31,6 +31,7 @@ pub struct TbSettings {
     margin_bottom: i32,
     margin_top: i32,
     windows_11_bugfix: bool,
+    restart_executables: Vec<String>,
 }
 
 impl TbSettings {
@@ -73,6 +74,7 @@ impl TbSettings {
             margin_offset_left: 0,
             margin_offset_right: 0,
             windows_11_bugfix: true,
+            restart_executables: Vec::new(),
         }
     }
 
@@ -121,6 +123,18 @@ impl TbSettings {
             return;
         }
         self.dynamic_borders_show_tray_if_disabled_on_hover = value;
+        self.try_save();
+    }
+
+    pub fn get_restart_executables(&self) -> Vec<String> {
+        self.restart_executables.clone()
+    }
+
+    pub fn set_restart_executables(&mut self, value: Vec<String>) {
+        if self.restart_executables == value {
+            return;
+        }
+        self.restart_executables = value;
         self.try_save();
     }
 

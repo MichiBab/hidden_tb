@@ -64,6 +64,7 @@ pub struct TbAccessibleSettings {
     margin_offset_left: i32,
     margin_offset_right: i32,
     windows_11_bugfix: bool,
+    restart_executables: Vec<String>,
 }
 
 impl TbAccessibleSettings {
@@ -94,6 +95,7 @@ impl TbAccessibleSettings {
             margin_offset_left: settings.get_margin_offset_left(),
             margin_offset_right: settings.get_margin_offset_right(),
             windows_11_bugfix: settings.get_windows_11_bugfix(),
+            restart_executables: settings.get_restart_executables(),
         }
     }
 
@@ -201,6 +203,8 @@ impl MyApp {
             .set_margin_offset_right(self.settings.margin_offset_right);
         self.global_settings
             .set_windows_11_bugfix(self.settings.windows_11_bugfix);
+        self.global_settings
+            .set_restart_executables(self.settings.restart_executables.clone());
     }
 
     fn formatted_string(&self, str: &str) -> egui::widget_text::RichText {
@@ -502,6 +506,8 @@ impl eframe::App for MyApp {
                             ui.add_space(SPACING);*/
                         });
                     });
+
+
                     ui.separator();
 
                     ui.add_space(SPACING);

@@ -1,9 +1,10 @@
-#![windows_subsystem = "windows"]
+//#![windows_subsystem = "windows"]
 
 use crate::tb_settings::TbSettings;
 use std::{thread, time};
 use taskbar::Taskbar;
 mod monitors;
+mod restart_process;
 mod settings_ui;
 mod signaling;
 mod taskbar;
